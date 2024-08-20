@@ -7,3 +7,4 @@ from approvalhandlers.mtahandler import MTAHandler
 from approvalhandlers.tithefarmhandler import TitheFarmHandler
 from approvalhandlers.farmingcontractshandler import FarmingContractsHandler
 from approvalhandlers.bahandler import BAHandler
+from approvalhandlers.challengehandler import ChallengeHandler

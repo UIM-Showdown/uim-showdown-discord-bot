@@ -5,6 +5,7 @@ import argparse
 from discord.ext import commands
 from discord import app_commands
 from ApprovalRequest import ApprovalRequest
+from typing import Literal
 
 # Parse command-line args
 parser = argparse.ArgumentParser(
@@ -99,7 +100,7 @@ async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo!')
+@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure you enter any arguments that are listed as "optional" if they are not 0)')
 async def submit_barbarian_assault(ctx: discord.Interaction, clogScreenshot: discord.Attachment, blackboardScreenshot: discord.Attachment,
   highGambles = 0,
   attackerPoints = 0,
@@ -121,6 +122,16 @@ async def submit_barbarian_assault(ctx: discord.Interaction, clogScreenshot: dis
     if(isinstance(argValue, int) and argValue < 0):
       raise BingoUtils.BingoUserError('BA arguments cannot be negative')
   request = ApprovalRequest(ctx, 'BA points')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
+@bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
+async def submit_challenge(ctx: discord.Interaction, screenshot: discord.Attachment, minutes: int, seconds: int, tenthsOfSeconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
+  if(minutes < 0 or seconds < 0 or tenthsOfSeconds < 0):
+    raise BingoUtils.BingoUserError('Times cannot be negative')
+  request = ApprovalRequest(ctx, f'{challenge} time of {minutes}:{seconds}.{tenthsOfSeconds}')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

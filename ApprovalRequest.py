@@ -11,6 +11,7 @@ handlers['submit_mta'] = MTAHandler()
 handlers['submit_tithe_farm'] = TitheFarmHandler()
 handlers['submit_farming_contracts'] = FarmingContractsHandler()
 handlers['submit_barbarian_assault'] = BAHandler()
+handlers['submit_challenge'] = ChallengeHandler()
 
 # Represents an approval request
 class ApprovalRequest():

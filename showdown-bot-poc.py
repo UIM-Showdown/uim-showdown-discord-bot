@@ -49,6 +49,16 @@ async def submit_collection_log(ctx: discord.Interaction, screenshot: discord.At
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (Make sure to add up your games across all difficulties)')
+async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Attachment, totalGames: int):
+  if(totalGames < 0):
+    raise BingoUtils.BingoUserError('Total games cannot be negative')
+  request = ApprovalRequest(ctx, f'{totalGames} games of pest control')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

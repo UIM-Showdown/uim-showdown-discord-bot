@@ -1,10 +1,11 @@
 import discord
-from approvalhandlers import MonsterKCHandler, ClogHandler
+from approvalhandlers import MonsterKCHandler, ClogHandler, PestControlHandler
 
 # Register approval handlers here
 handlers = {}
 handlers['submit_monster_killcount'] = MonsterKCHandler()
 handlers['submit_collection_log'] = ClogHandler()
+handlers['submit_pest_control'] = PestControlHandler()
 
 # Represents an approval request
 class ApprovalRequest():

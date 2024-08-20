@@ -46,23 +46,25 @@ async def monster_autocomplete(
   ctx: discord.Interaction, 
   current: str
 ) -> list[app_commands.Choice[str]]:
-  if(len(current) < 3):
-    return []
-  return [
+  results = [
     app_commands.Choice(name = monster, value = monster)
     for monster in monsters if current.lower() in monster.lower()
   ]
+  if(len(results) > 25):
+    results = results[:25]
+  return results
 
 async def clog_autocomplete(
   ctx: discord.Interaction, 
   current: str
 ) -> list[app_commands.Choice[str]]:
-  if(len(current) < 3):
-    return []
-  return [
+  results = [
     app_commands.Choice(name = item, value = item)
     for item in clogItems if current.lower() in item.lower()
   ]
+  if(len(results) > 25):
+    results = results[:25]
+  return results
 
 
 class BingoUserError(Exception):

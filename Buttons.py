@@ -25,3 +25,5 @@ class DenyButton(ui.Button):
     self.approvalRequest.deny()
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
+    submissionsChannel = self.bot.get_channel(BingoUtils.submissionsChannelId)
+    await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been denied')

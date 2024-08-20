@@ -79,6 +79,16 @@ async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, a
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
+async def submit_tithe_farm(ctx: discord.Interaction, screenshot: discord.Attachment, points: int):
+  if(points < 0):
+    raise BingoUtils.BingoUserError('Points cannot be negative')
+  request = ApprovalRequest(ctx, f'{points} tithe farm points')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

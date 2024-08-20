@@ -8,6 +8,7 @@ handlers['submit_collection_log'] = ClogHandler()
 handlers['submit_pest_control'] = PestControlHandler()
 handlers['submit_lms'] = LMSHandler()
 handlers['submit_mta'] = MTAHandler()
+handlers['submit_tithe_farm'] = TitheFarmHandler()
 
 # Represents an approval request
 class ApprovalRequest():

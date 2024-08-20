@@ -9,6 +9,8 @@ handlers['submit_pest_control'] = PestControlHandler()
 handlers['submit_lms'] = LMSHandler()
 handlers['submit_mta'] = MTAHandler()
 handlers['submit_tithe_farm'] = TitheFarmHandler()
+handlers['submit_farming_contracts'] = FarmingContractsHandler()
+handlers['submit_barbarian_assault'] = BAHandler()
 
 # Represents an approval request
 class ApprovalRequest():
@@ -19,7 +21,7 @@ class ApprovalRequest():
     self.approvalHandler = handlers[self.commandName]
     self.shortDesc = shortDesc
     for param in ctx.data['options']:
-      if(param['name'] == 'screenshot'):
+      if('screenshot' in lower(param['name'])):
         self.params[param['name']] = ctx.data['resolved']['attachments'][param['value']]['url']
       else:
         self.params[param['name']] = str(param['value'])

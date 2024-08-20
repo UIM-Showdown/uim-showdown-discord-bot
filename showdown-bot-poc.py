@@ -99,6 +99,33 @@ async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo!')
+async def submit_barbarian_assault(ctx: discord.Interaction, clogScreenshot: discord.Attachment, blackboardScreenshot: discord.Attachment,
+  highGambles = 0,
+  attackerPoints = 0,
+  defenderPoints = 0,
+  collectorPoints = 0,
+  healerPoints = 0,
+  attackerLevel = 0,
+  defenderLevel = 0,
+  collectorLevel = 0,
+  healerLevel = 0,
+  hats = 0,
+  torso = 0,
+  skirt = 0,
+  gloves = 0,
+  boots = 0
+):
+  argValues = [locals()[param.name] for param in inspect.signature(submit_farming_contracts).parameters.values()]
+  for argValue in argValues:
+    if(isinstance(argValue, int) and argValue < 0):
+      raise BingoUtils.BingoUserError('BA arguments cannot be negative')
+  request = ApprovalRequest(ctx, 'BA points')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

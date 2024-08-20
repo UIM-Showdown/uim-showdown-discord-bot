@@ -1,10 +1,9 @@
-import discord
 import json
-from discord import ui, app_commands
 import configparser
+import logging
+from discord import ui, app_commands, Interaction
 from buttons import ApproveButton, DenyButton
 from approvalrequest import ApprovalRequest
-import logging
 
 # Load properties
 config = configparser.ConfigParser()
@@ -45,7 +44,7 @@ for clogItem in clogInfo:
 
 # Autocomplete callbacks
 async def monster_autocomplete(
-  ctx: discord.Interaction, 
+  ctx: Interaction, 
   current: str
 ) -> list[app_commands.Choice[str]]:
   results = [
@@ -57,7 +56,7 @@ async def monster_autocomplete(
   return results
 
 async def clog_autocomplete(
-  ctx: discord.Interaction, 
+  ctx: Interaction, 
   current: str
 ) -> list[app_commands.Choice[str]]:
   results = [

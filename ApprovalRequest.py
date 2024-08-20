@@ -1,4 +1,4 @@
-import discord
+from discord import Interaction
 from approvalhandlers import *
 
 # Register approval handlers here
@@ -15,7 +15,7 @@ handlers['submit_challenge'] = challengehandler.ChallengeHandler()
 
 # Represents an approval request
 class ApprovalRequest():
-  def __init__(self, ctx: discord.Interaction, shortDesc = None):
+  def __init__(self, ctx: Interaction, shortDesc = None):
     self.user = ctx.user
     self.commandName = ctx.command.name
     self.params = {}

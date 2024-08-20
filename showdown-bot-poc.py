@@ -27,14 +27,23 @@ async def handleCommandErrors(ctx, error):
 # Register commands
 @bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
 @app_commands.autocomplete(monster=BingoUtils.monster_autocomplete)
-async def test_submit_kc(ctx: discord.Interaction, screenshot: discord.Attachment, monster: str, kc: int):
+async def submit_monster_killcount(ctx: discord.Interaction, screenshot: discord.Attachment, monster: str, kc: int):
   if(kc < 0):
     raise BingoUtils.BingoUserError('KC cannot be negative')
   if(monster not in BingoUtils.monsters):
     raise BingoUtils.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
-  if(kc == 999):
-    x = 1 / 0 # To demo an unexpected error
   request = ApprovalRequest(ctx, f'{kc} KC of {monster}')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
+@bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
+@app_commands.autocomplete(item=BingoUtils.clog_autocomplete)
+async def submit_collection_log(ctx: discord.Interaction, screenshot: discord.Attachment, item: str):
+  if(item not in BingoUtils.clogItems):
+    raise BingoUtils.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
+  request = ApprovalRequest(ctx, f'Collection log item "{item}"')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

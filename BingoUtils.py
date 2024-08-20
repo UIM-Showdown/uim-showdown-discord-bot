@@ -33,6 +33,15 @@ monsters = []
 for monster in monsterInfo:
   monsters.append(monster['name'])
 
+# Load clog info
+clogInfo = []
+with open('bingo-info/collection-log-items.json') as clogFile:
+  clogInfo = json.load(clogFile)
+clogItems = []
+for clogItem in clogInfo:
+  clogItems.append(clogItem['name'])
+
+# Autocomplete callbacks
 async def monster_autocomplete(
   ctx: discord.Interaction, 
   current: str
@@ -42,6 +51,17 @@ async def monster_autocomplete(
   return [
     app_commands.Choice(name = monster, value = monster)
     for monster in monsters if current.lower() in monster.lower()
+  ]
+
+async def clog_autocomplete(
+  ctx: discord.Interaction, 
+  current: str
+) -> list[app_commands.Choice[str]]:
+  if(len(current) < 3):
+    return []
+  return [
+    app_commands.Choice(name = item, value = item)
+    for item in clogItems if current.lower() in item.lower()
   ]
 
 

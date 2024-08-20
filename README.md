@@ -49,3 +49,15 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Add the new approval handler subclass to the imports in approvalhandlers/\_\_init\_\_.py
 * Register the new approval handler subclass at the top of ApprovalRequest.py
 * Everything outside of input validation and approval handling is already handled by the bot's core code.
+
+## config.ini format
+
+**DO NOT INCLUDE THE CONFIG.INI FILE IN VERSION CONTROL; IT CONTAINS SECRETS.**
+
+```
+[BingoProperties]
+token = <API token goes here>
+approvalsChannelId = <Channel ID for the approvals channel goes here>
+errorsChannelId = <Channel ID for the errors channel goes here>
+guildId = <Discord server ID goes here>
+```

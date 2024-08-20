@@ -4,7 +4,7 @@ import configparser
 import argparse
 from discord.ext import commands
 from discord import app_commands
-from ApprovalRequest import ApprovalRequest
+from BingoUtils import ApprovalRequest
 
 # Parse command-line args
 parser = argparse.ArgumentParser(

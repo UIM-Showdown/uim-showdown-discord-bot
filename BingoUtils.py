@@ -12,6 +12,7 @@ bingoProperties = config['BingoProperties']
 token = bingoProperties['token']
 approvalsChannelId = int(bingoProperties['approvalsChannelId'])
 errorsChannelId = int(bingoProperties['errorsChannelId'])
+guildId = int(bingoProperties['guildId'])
 
 # Load team info
 teamInfo = []

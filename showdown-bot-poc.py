@@ -37,20 +37,6 @@ async def test_submit_kc(ctx: discord.Interaction, screenshot: discord.Attachmen
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-# Utility command during testing to purge all bot-related channels
-# This will only work if testing mode is enabled at the command line
-@bot.tree.command(name='purge_all', description='Purge all bot-related channels, THIS IS DANGEROUS')
-@app_commands.checks.has_role('Event staff')
-async def purge_all(ctx: discord.Interaction):
-  if(not commandLineArgs.test):
-    raise BingoUtils.BingoUserError('Test mode is not enabled, rerun the bot with --test to enable test mode')
-  submissionsChannel = bot.get_channel(BingoUtils.submissionsChannelId)
-  approvalsChannel = bot.get_channel(BingoUtils.approvalsChannelId)
-  errorsChannel = bot.get_channel(BingoUtils.errorsChannelId)
-  await submissionsChannel.purge(limit=99999)
-  await approvalsChannel.purge(limit=99999)
-  await errorsChannel.purge(limit=99999)
-
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

@@ -59,6 +59,16 @@ async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Atta
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
+async def submit_lms(ctx: discord.Interaction, screenshot: discord.Attachment, kills: int):
+  if(kills < 0):
+    raise BingoUtils.BingoUserError('Kills cannot be negative')
+  request = ApprovalRequest(ctx, f'{kills} kills in LMS')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

@@ -41,3 +41,11 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Discord.py library runs the code in the method annotated with @bot.tree.error
 * Command error handler callback method calls BingoUtils.handleCommandError()
 * BingoUtils.handleCommandError() sees that the error is not a BingoUserError and sends a message to the errors channel listing the request/error details
+
+## Adding a command
+
+* Add a method to showdown-bot-poc.py annotated with @bot.tree.command to define the command and input validation logic. It must call BingoUtils.requestApproval(), and then send a message back with request info.
+* Create an approval handler subclass in the approvalhandlers package (e.g. testsubmitkchandler.py). This class's requestApproved() method handles any non-Discord-facing actions that must be taken when the request is approved.
+* Add the new approval handler subclass to the imports in approvalhandlers/\_\_init\_\_.py
+* Register the new approval handler subclass at the top of ApprovalRequest.py
+* Everything outside of input validation and approval handling is already handled by the bot's core code.

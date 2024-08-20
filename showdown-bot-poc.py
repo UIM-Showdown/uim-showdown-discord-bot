@@ -89,6 +89,16 @@ async def submit_tithe_farm(ctx: discord.Interaction, screenshot: discord.Attach
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
+async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord.Attachment, contracts: int):
+  if(contracts < 0):
+    raise BingoUtils.BingoUserError('Contracts cannot be negative')
+  request = ApprovalRequest(ctx, f'{contracts} farming contracts')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

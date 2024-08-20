@@ -27,3 +27,17 @@ A POC for a Python version of the UIM Showdown Discord bot
 * The callback method in the DenyButton class (in Buttons.py) is called
 * The callback method calls the deny() method on the ApprovalRequest object (which was stored on the button), which currently does nothing (this may be removed)
 * The callback method remove the buttons, sends a sucess message to the approvals channel, and then sends the "denied" message back to the submissions channel
+
+### User error handling:
+
+* Command method raises a BingoUserError due to failed input validation
+* Discord.py library runs the code in the method annotated with @bot.tree.error
+* Command error handler callback method calls BingoUtils.handleCommandError()
+* BingoUtils.handleCommandError() sees that the error is a BingoUserError and simply sends a message back with the error text
+
+### Unexpected error handling:
+
+* Command method raises an error other than BingoUserError due to an unexpected error
+* Discord.py library runs the code in the method annotated with @bot.tree.error
+* Command error handler callback method calls BingoUtils.handleCommandError()
+* BingoUtils.handleCommandError() sees that the error is not a BingoUserError and sends a message to the errors channel listing the request/error details

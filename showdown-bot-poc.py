@@ -2,6 +2,7 @@ import discord
 import BingoUtils
 import configparser
 import argparse
+import inspect
 from discord.ext import commands
 from discord import app_commands
 from ApprovalRequest import ApprovalRequest
@@ -117,7 +118,7 @@ async def submit_barbarian_assault(ctx: discord.Interaction, clog_screenshot: di
   gloves: int = 0,
   boots: int = 0
 ):
-  argValues = [locals()[param.name] for param in inspect.signature(submit_farming_contracts).parameters.values()]
+  argValues = [locals()[param.name] for param in submit_barbarian_assault.parameters]
   for argValue in argValues:
     if(isinstance(argValue, int) and argValue < 0):
       raise BingoUtils.BingoUserError('BA arguments cannot be negative')

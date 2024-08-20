@@ -4,6 +4,7 @@ from discord import ui, app_commands
 import configparser
 from Buttons import ApproveButton, DenyButton
 from ApprovalRequest import ApprovalRequest
+import logging
 
 # Load properties
 config = configparser.ConfigParser()
@@ -83,6 +84,7 @@ async def handleCommandError(bot, ctx, error):
   if(isinstance(error.original, BingoUserError)):
     await ctx.response.send_message(f'Error: {str(error.original)}')
   else:
+    logging.error('Error', exc_info=error)
     request = ApprovalRequest(ctx)
     channel = bot.get_channel(errorsChannelId)
     errorText = 'Unexpected error during processing of a command:\n'

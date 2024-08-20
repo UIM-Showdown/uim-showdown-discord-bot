@@ -2,8 +2,8 @@ import discord
 import json
 from discord import ui, app_commands
 import configparser
-from Buttons import ApproveButton, DenyButton
-from ApprovalRequest import ApprovalRequest
+from buttons import ApproveButton, DenyButton
+from approvalrequest import ApprovalRequest
 import logging
 
 # Load properties

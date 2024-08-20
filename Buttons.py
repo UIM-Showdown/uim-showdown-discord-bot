@@ -1,6 +1,6 @@
 import discord
 from discord import ui
-import BingoUtils
+import bingoutils
 
 class ApproveButton(ui.Button):
   def __init__(self, approvalRequest, bot):
@@ -12,8 +12,8 @@ class ApproveButton(ui.Button):
     self.approvalRequest.approve()
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request approved')
-    team = BingoUtils.discordUserTeams[ctx.user.name]
-    submissionsChannel = self.bot.get_channel(BingoUtils.teamSubmissionChannels[team])
+    team = bingoutils.discordUserTeams[ctx.user.name]
+    submissionsChannel = self.bot.get_channel(bingoutils.teamSubmissionChannels[team])
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been approved')
 
 class DenyButton(ui.Button):
@@ -26,6 +26,6 @@ class DenyButton(ui.Button):
     self.approvalRequest.deny()
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
-    team = BingoUtils.discordUserTeams[ctx.user.name]
-    submissionsChannel = self.bot.get_channel(BingoUtils.teamSubmissionChannels[team])
+    team = bingoutils.discordUserTeams[ctx.user.name]
+    submissionsChannel = self.bot.get_channel(bingoutils.teamSubmissionChannels[team])
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been denied')

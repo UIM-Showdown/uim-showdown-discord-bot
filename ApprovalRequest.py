@@ -22,7 +22,7 @@ class ApprovalRequest():
     self.approvalHandler = handlers[self.commandName]
     self.shortDesc = shortDesc
     for param in ctx.data['options']:
-      if('screenshot' in lower(param['name'])):
+      if('screenshot' in param['name'].lower()):
         self.params[param['name']] = ctx.data['resolved']['attachments'][param['value']]['url']
       else:
         self.params[param['name']] = str(param['value'])

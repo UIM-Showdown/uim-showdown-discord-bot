@@ -5,6 +5,7 @@ from approvalhandlers import TestSubmitKCHandler
 handlers = {}
 handlers['test_submit_kc'] = TestSubmitKCHandler()
 
+# Represents an approval request
 class ApprovalRequest():
   def __init__(self, ctx: discord.Interaction):
     self.user = ctx.user.name

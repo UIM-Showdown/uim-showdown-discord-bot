@@ -2,7 +2,6 @@ import discord
 import BingoUtils
 import configparser
 import argparse
-import inspect
 from discord.ext import commands
 from discord import app_commands
 from ApprovalRequest import ApprovalRequest

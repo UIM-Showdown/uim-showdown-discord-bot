@@ -3,15 +3,15 @@ from approvalhandlers import *
 
 # Register approval handlers here
 handlers = {}
-handlers['submit_monster_killcount'] = MonsterKCHandler()
-handlers['submit_collection_log'] = ClogHandler()
-handlers['submit_pest_control'] = PestControlHandler()
-handlers['submit_lms'] = LMSHandler()
-handlers['submit_mta'] = MTAHandler()
-handlers['submit_tithe_farm'] = TitheFarmHandler()
-handlers['submit_farming_contracts'] = FarmingContractsHandler()
-handlers['submit_barbarian_assault'] = BAHandler()
-handlers['submit_challenge'] = ChallengeHandler()
+handlers['submit_monster_killcount'] = monsterkchandler.MonsterKCHandler()
+handlers['submit_collection_log'] = cloghandler.ClogHandler()
+handlers['submit_pest_control'] = pestcontrolhandler.PestControlHandler()
+handlers['submit_lms'] = lmshandler.LMSHandler()
+handlers['submit_mta'] = mtahandler.MTAHandler()
+handlers['submit_tithe_farm'] = tithefarmhandler.TitheFarmHandler()
+handlers['submit_farming_contracts'] = farmingcontractshandler.FarmingContractsHandler()
+handlers['submit_barbarian_assault'] = bahandler.BAHandler()
+handlers['submit_challenge'] = challengehandler.ChallengeHandler()
 
 # Represents an approval request
 class ApprovalRequest():

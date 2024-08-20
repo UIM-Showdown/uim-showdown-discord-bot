@@ -1,10 +1,24 @@
-from approvalhandlers.approvalhandler import ApprovalHandler
-from approvalhandlers.monsterkchandler import MonsterKCHandler
-from approvalhandlers.cloghandler import ClogHandler
-from approvalhandlers.pestcontrolhandler import PestControlHandler
-from approvalhandlers.lmshandler import LMSHandler
-from approvalhandlers.mtahandler import MTAHandler
-from approvalhandlers.tithefarmhandler import TitheFarmHandler
-from approvalhandlers.farmingcontractshandler import FarmingContractsHandler
-from approvalhandlers.bahandler import BAHandler
-from approvalhandlers.challengehandler import ChallengeHandler
+import approvalhandlers.approvalhandler
+import approvalhandlers.monsterkchandler
+import approvalhandlers.cloghandler
+import approvalhandlers.pestcontrolhandler 
+import approvalhandlers.lmshandler
+import approvalhandlers.mtahandler
+import approvalhandlers.tithefarmhandler
+import approvalhandlers.farmingcontractshandler
+import approvalhandlers.bahandler
+import approvalhandlers.challengehandler
+
+__all__ = [
+  "approvalhandler",
+  "monsterkchandler",
+  "cloghandler",
+  "pestcontrolhandler",
+  "lmshandler",
+  "mtahandler",
+  "tithefarmhandler",
+  "farmingcontractshandler",
+  "monsterkchandler",
+  "bahandler",
+  "challengehandler",
+]

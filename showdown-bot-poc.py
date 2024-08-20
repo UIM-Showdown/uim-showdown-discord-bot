@@ -50,9 +50,9 @@ async def submit_collection_log(ctx: discord.Interaction, screenshot: discord.At
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (Make sure to add up your games across all difficulties)')
-async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Attachment, totalGames: int):
-  if(totalGames < 0):
+@bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
+async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Attachment, total_games: int):
+  if(total_games < 0):
     raise BingoUtils.BingoUserError('Total games cannot be negative')
   request = ApprovalRequest(ctx, f'{totalGames} games of pest control')
   await BingoUtils.requestApproval(bot, request)
@@ -71,10 +71,10 @@ async def submit_lms(ctx: discord.Interaction, screenshot: discord.Attachment, k
   await ctx.response.send_message(responseText)
 
 @bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
-async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, alchemyPoints: int, graveyardPoints: int, enchantingPoints: int, telekineticPoints: int):
-  if(alchemyPoints < 0 or graveyardPoints < 0 or enchantingPoints < 0 or telekineticPoints < 0):
+async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
+  if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
     raise BingoUtils.BingoUserError('Points cannot be negative')
-  request = ApprovalRequest(ctx, f'{alchemyPoints}/{graveyardPoints}/{enchantingPoints}/{telekineticPoints} MTA points')
+  request = ApprovalRequest(ctx, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)
@@ -100,22 +100,22 @@ async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure you enter any arguments that are listed as "optional" if they are not 0)')
-async def submit_barbarian_assault(ctx: discord.Interaction, clogScreenshot: discord.Attachment, blackboardScreenshot: discord.Attachment,
-  highGambles = 0,
-  attackerPoints = 0,
-  defenderPoints = 0,
-  collectorPoints = 0,
-  healerPoints = 0,
-  attackerLevel = 0,
-  defenderLevel = 0,
-  collectorLevel = 0,
-  healerLevel = 0,
-  hats = 0,
-  torso = 0,
-  skirt = 0,
-  gloves = 0,
-  boots = 0
+@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure to check the optional arguments)')
+async def submit_barbarian_assault(ctx: discord.Interaction, clog_screenshot: discord.Attachment, blackboard_screenshot: discord.Attachment,
+  high_gambles: int = 0,
+  attacker_points: int = 0,
+  defender_points: int = 0,
+  collector_points: int = 0,
+  healer_points: int = 0,
+  attacker_level: int = 0,
+  defender_level: int = 0,
+  collector_level: int = 0,
+  healer_level: int = 0,
+  hats: int = 0,
+  torso: int = 0,
+  skirt: int = 0,
+  gloves: int = 0,
+  boots: int = 0
 ):
   argValues = [locals()[param.name] for param in inspect.signature(submit_farming_contracts).parameters.values()]
   for argValue in argValues:
@@ -128,10 +128,10 @@ async def submit_barbarian_assault(ctx: discord.Interaction, clogScreenshot: dis
   await ctx.response.send_message(responseText)
 
 @bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
-async def submit_challenge(ctx: discord.Interaction, screenshot: discord.Attachment, minutes: int, seconds: int, tenthsOfSeconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
+async def submit_challenge(ctx: discord.Interaction, screenshot: discord.Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
   if(minutes < 0 or seconds < 0 or tenthsOfSeconds < 0):
     raise BingoUtils.BingoUserError('Times cannot be negative')
-  request = ApprovalRequest(ctx, f'{challenge} time of {minutes}:{seconds}.{tenthsOfSeconds}')
+  request = ApprovalRequest(ctx, f'{challenge} time of {minutes}:{seconds}.{tenths_of_seconds}')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

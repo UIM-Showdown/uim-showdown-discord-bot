@@ -1,5 +1,5 @@
 import discord
-from approvalhandlers import MonsterKCHandler, ClogHandler, PestControlHandler, LMSHandler
+from approvalhandlers import *
 
 # Register approval handlers here
 handlers = {}

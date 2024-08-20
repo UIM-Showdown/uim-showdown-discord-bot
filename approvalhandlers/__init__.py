@@ -3,3 +3,4 @@ from approvalhandlers.monsterkchandler import MonsterKCHandler
 from approvalhandlers.cloghandler import ClogHandler
 from approvalhandlers.pestcontrolhandler import PestControlHandler
 from approvalhandlers.lmshandler import LMSHandler
+from approvalhandlers.mtahandler import MTAHandler

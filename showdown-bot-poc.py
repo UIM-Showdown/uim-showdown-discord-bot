@@ -69,6 +69,16 @@ async def submit_lms(ctx: discord.Interaction, screenshot: discord.Attachment, k
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
+@bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
+async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, alchemyPoints: int, graveyardPoints: int, enchantingPoints: int, telekineticPoints: int):
+  if(alchemyPoints < 0 or graveyardPoints < 0 or enchantingPoints < 0 or telekineticPoints < 0):
+    raise BingoUtils.BingoUserError('Points cannot be negative')
+  request = ApprovalRequest(ctx, f'{alchemyPoints}/{graveyardPoints}/{enchantingPoints}/{telekineticPoints} MTA points')
+  await BingoUtils.requestApproval(bot, request)
+  responseText = 'Request received:\n'
+  responseText += str(request)
+  await ctx.response.send_message(responseText)
+
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')

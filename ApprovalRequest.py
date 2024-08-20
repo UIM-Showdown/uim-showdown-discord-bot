@@ -7,6 +7,7 @@ handlers['submit_monster_killcount'] = MonsterKCHandler()
 handlers['submit_collection_log'] = ClogHandler()
 handlers['submit_pest_control'] = PestControlHandler()
 handlers['submit_lms'] = LMSHandler()
+handlers['submit_mta'] = MTAHandler()
 
 # Represents an approval request
 class ApprovalRequest():

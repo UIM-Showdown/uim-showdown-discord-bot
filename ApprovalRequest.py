@@ -1,9 +1,9 @@
 import discord
-from approvalhandlers import TestSubmitKCHandler
+from approvalhandlers import MonsterKCHandler
 
 # Register approval handlers here
 handlers = {}
-handlers['test_submit_kc'] = TestSubmitKCHandler()
+handlers['submit_monster_killcount'] = MonsterKCHandler()
 
 # Represents an approval request
 class ApprovalRequest():

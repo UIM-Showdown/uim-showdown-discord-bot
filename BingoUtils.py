@@ -1,6 +1,6 @@
 import discord
 import json
-from discord import ui
+from discord import ui, app_commands
 import configparser
 from Buttons import ApproveButton, DenyButton
 from ApprovalRequest import ApprovalRequest
@@ -13,7 +13,7 @@ token = bingoProperties['token']
 approvalsChannelId = int(bingoProperties['approvalsChannelId'])
 errorsChannelId = int(bingoProperties['errorsChannelId'])
 
-# Load bingo info
+# Load team info
 teamInfo = []
 with open('bingo-info/teams.json') as teamsFile:
   teamInfo = json.load(teamsFile)
@@ -24,6 +24,26 @@ for team in teamInfo:
 teamSubmissionChannels = {}
 for team in teamInfo:
   teamSubmissionChannels[team['name']] = team['submissionChannel']
+
+# Load monster info
+monsterInfo = []
+with open('bingo-info/monsters.json') as monstersFile:
+  monsterInfo = json.load(monstersFile)
+monsters = []
+for monster in monsterInfo:
+  monsters.append(monster['name'])
+
+async def monster_autocomplete(
+  ctx: discord.Interaction, 
+  current: str
+) -> list[app_commands.Choice[str]]:
+  if(len(current) < 3):
+    return []
+  return [
+    app_commands.Choice(name = monster, value = monster)
+    for monster in monsters if current.lower() in monster.lower()
+  ]
+
 
 class BingoUserError(Exception):
 

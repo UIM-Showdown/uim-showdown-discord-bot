@@ -24,14 +24,17 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 async def handleCommandErrors(ctx, error):
   await BingoUtils.handleCommandError(bot, ctx, error)
 
-# Demo command for submitting KC for something
-@bot.tree.command(name='test_submit_kc', description='Test command for submitting KC')
-async def test_submit_kc(ctx: discord.Interaction, screenshot: discord.Attachment, kc: int):
+# Register commands
+@bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
+@app_commands.autocomplete(monster=BingoUtils.monster_autocomplete)
+async def test_submit_kc(ctx: discord.Interaction, screenshot: discord.Attachment, monster: str, kc: int):
   if(kc < 0):
     raise BingoUtils.BingoUserError('KC cannot be negative')
+  if(monster not in BingoUtils.monsters):
+    raise BingoUtils.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
   if(kc == 999):
     x = 1 / 0 # To demo an unexpected error
-  request = ApprovalRequest(ctx, f'{kc} KC')
+  request = ApprovalRequest(ctx, f'{kc} KC of {monster}')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

@@ -1,2 +1,2 @@
 from approvalhandlers.approvalhandler import ApprovalHandler
-from approvalhandlers.testsubmitkchandler import TestSubmitKCHandler
+from approvalhandlers.monsterkchandler import MonsterKCHandler

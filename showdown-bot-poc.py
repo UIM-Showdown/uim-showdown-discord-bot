@@ -26,7 +26,7 @@ async def handleCommandErrors(ctx, error):
   await BingoUtils.handleCommandError(bot, ctx, error)
 
 # Register commands
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
+@bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
 @app_commands.autocomplete(monster=BingoUtils.monster_autocomplete)
 async def submit_monster_killcount(ctx: discord.Interaction, screenshot: discord.Attachment, monster: str, kc: int):
   if(kc < 0):
@@ -39,7 +39,7 @@ async def submit_monster_killcount(ctx: discord.Interaction, screenshot: discord
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
+@bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
 @app_commands.autocomplete(item=BingoUtils.clog_autocomplete)
 async def submit_collection_log(ctx: discord.Interaction, screenshot: discord.Attachment, item: str):
   if(item not in BingoUtils.clogItems):
@@ -50,7 +50,7 @@ async def submit_collection_log(ctx: discord.Interaction, screenshot: discord.At
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
+@bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
 async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Attachment, total_games: int):
   if(total_games < 0):
     raise BingoUtils.BingoUserError('Total games cannot be negative')
@@ -60,7 +60,7 @@ async def submit_pest_control(ctx: discord.Interaction, screenshot: discord.Atta
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_lms', description='Submit your LMS kills for the bingo!')
+@bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
 async def submit_lms(ctx: discord.Interaction, screenshot: discord.Attachment, kills: int):
   if(kills < 0):
     raise BingoUtils.BingoUserError('Kills cannot be negative')
@@ -70,7 +70,7 @@ async def submit_lms(ctx: discord.Interaction, screenshot: discord.Attachment, k
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_mta', description='Submit your MTA points for the bingo!')
+@bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
 async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
   if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
     raise BingoUtils.BingoUserError('Points cannot be negative')
@@ -80,7 +80,7 @@ async def submit_mta(ctx: discord.Interaction, screenshot: discord.Attachment, a
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
+@bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
 async def submit_tithe_farm(ctx: discord.Interaction, screenshot: discord.Attachment, points: int):
   if(points < 0):
     raise BingoUtils.BingoUserError('Points cannot be negative')
@@ -90,7 +90,7 @@ async def submit_tithe_farm(ctx: discord.Interaction, screenshot: discord.Attach
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
+@bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
 async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord.Attachment, contracts: int):
   if(contracts < 0):
     raise BingoUtils.BingoUserError('Contracts cannot be negative')
@@ -100,7 +100,7 @@ async def submit_farming_contracts(ctx: discord.Interaction, screenshot: discord
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure to check the optional arguments)')
+@bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure to check the optional arguments)')
 async def submit_barbarian_assault(ctx: discord.Interaction, clog_screenshot: discord.Attachment, blackboard_screenshot: discord.Attachment,
   high_gambles: int = 0,
   attacker_points: int = 0,
@@ -127,7 +127,7 @@ async def submit_barbarian_assault(ctx: discord.Interaction, clog_screenshot: di
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-@bot.tree.command(guild=discord.Object(id=BingoUtils.guildId), name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
+@bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
 async def submit_challenge(ctx: discord.Interaction, screenshot: discord.Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
   if(minutes < 0 or seconds < 0 or tenthsOfSeconds < 0):
     raise BingoUtils.BingoUserError('Times cannot be negative')
@@ -139,43 +139,15 @@ async def submit_challenge(ctx: discord.Interaction, screenshot: discord.Attachm
 
 # Command to sync command changes
 # DO NOT SPAM THIS; the sync command does not properly report rate limiting responses
-@bot.command()
+@bot.tree.command(name='sync', description='Sync command changes - DO NOT SPAM THIS')
 @commands.guild_only()
 @app_commands.checks.has_role('Event staff')
-async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
-    if not guilds:
-        if spec == "~":
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "*":
-            ctx.bot.tree.copy_global_to(guild=ctx.guild)
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-        elif spec == "^":
-            ctx.bot.tree.clear_commands(guild=ctx.guild)
-            await ctx.bot.tree.sync(guild=ctx.guild)
-            synced = []
-        else:
-            synced = await ctx.bot.tree.sync()
-
-        await ctx.send(
-            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-        )
-        return
-
-    ret = 0
-    for guild in guilds:
-        try:
-            await ctx.bot.tree.sync(guild=guild)
-        except discord.HTTPException:
-            pass
-        else:
-            ret += 1
-
-    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+async def sync(ctx: discord.Interaction):
+  synced = await bot.tree.sync()
+  await ctx.response.send_message(f"Synced {len(synced)} commands.")
 
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')
-  await bot.tree.sync() # This sets up the app commands in the Discord server based on what we register here
-  print('Tree synced!')
 
 bot.run(BingoUtils.token)

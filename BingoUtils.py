@@ -1,4 +1,5 @@
 import discord
+import json
 from discord import ui
 import configparser
 from Buttons import ApproveButton, DenyButton
@@ -11,7 +12,18 @@ bingoProperties = config['BingoProperties']
 token = bingoProperties['token']
 approvalsChannelId = int(bingoProperties['approvalsChannelId'])
 errorsChannelId = int(bingoProperties['errorsChannelId'])
-submissionsChannelId = int(bingoProperties['submissionsChannelId'])
+
+# Load bingo info
+teamInfo = []
+with open('bingo-info/teams.json') as teamsFile:
+  teamInfo = json.load(teamsFile)
+discordUserTeams = {}
+for team in teamInfo:
+  for player in team['players']:
+    discordUserTeams[player['tag']] = team['name']
+teamSubmissionChannels = {}
+for team in teamInfo:
+  teamSubmissionChannels[team['name']] = team['submissionChannel']
 
 class BingoUserError(Exception):
 

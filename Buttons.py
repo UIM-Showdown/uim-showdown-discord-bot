@@ -12,7 +12,8 @@ class ApproveButton(ui.Button):
     self.approvalRequest.approve()
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request approved')
-    submissionsChannel = self.bot.get_channel(BingoUtils.submissionsChannelId)
+    team = BingoUtils.discordUserTeams[ctx.user.name]
+    submissionsChannel = self.bot.get_channel(BingoUtils.teamSubmissionChannels[team])
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been approved')
 
 class DenyButton(ui.Button):
@@ -25,5 +26,6 @@ class DenyButton(ui.Button):
     self.approvalRequest.deny()
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
-    submissionsChannel = self.bot.get_channel(BingoUtils.submissionsChannelId)
+    team = BingoUtils.discordUserTeams[ctx.user.name]
+    submissionsChannel = self.bot.get_channel(BingoUtils.teamSubmissionChannels[team])
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been denied')

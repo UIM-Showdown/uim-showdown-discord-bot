@@ -31,7 +31,7 @@ async def test_submit_kc(ctx: discord.Interaction, screenshot: discord.Attachmen
     raise BingoUtils.BingoUserError('KC cannot be negative')
   if(kc == 999):
     x = 1 / 0 # To demo an unexpected error
-  request = ApprovalRequest(ctx)
+  request = ApprovalRequest(ctx, f'{kc} KC')
   await BingoUtils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

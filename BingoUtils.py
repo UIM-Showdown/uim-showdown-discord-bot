@@ -41,7 +41,6 @@ async def requestApproval(bot, request):
   requestText = 'New approval requested:\n'
   requestText += str(request)
   view = ui.View()
-  denyButton = ui.Button(style=discord.ButtonStyle.danger, custom_id='deny', label='Deny')
-  view.add_item(ApproveButton(request))
-  view.add_item(DenyButton(request))
+  view.add_item(ApproveButton(request, bot))
+  view.add_item(DenyButton(request, bot))
   await bot.get_channel(approvalsChannelId).send(requestText, view=view)

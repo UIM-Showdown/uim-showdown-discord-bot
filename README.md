@@ -13,7 +13,7 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Create a config.ini file at the root of the project directory (format documented below)
 * Verify that the contents of the bingo-info directory are up to date
 * Run the bot:
-  * Windows: `py -3 -m pip install -U discord.py`
+  * Windows: `py -3 ./showdown-bot-poc.py`
   * Linux: `python3 ./showdown-bot-poc.py`
 
 ## Code flows
@@ -63,6 +63,8 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Add the new approval handler subclass to the imports in approvalhandlers/\_\_init\_\_.py
 * Register the new approval handler subclass at the top of ApprovalRequest.py
 * Everything outside of input validation and approval handling is already handled by the bot's core code.
+* To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdown-bot-poc.py --updatecommands`
+  * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
 
 ## config.ini format
 

@@ -4,6 +4,8 @@ A POC for a Python version of the UIM Showdown Discord bot
 
 ## Setup
 
+* Install the latest version of [Python 3](https://www.python.org/downloads/)
+  * Python 3.5 or later is required due to the usage of the typing module
 * Install the "discord.py" package via pip:
   * Windows: `py -3 -m pip install -U discord.py`
   * Linux: `python3 -m pip install -U discord.py`

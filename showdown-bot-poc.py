@@ -130,7 +130,7 @@ async def submit_barbarian_assault(ctx: Interaction, clog_screenshot: Attachment
 async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
   if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
     raise bingoutils.BingoUserError('Times cannot be negative')
-  request = ApprovalRequest(ctx, f'{challenge} time of {minutes}:{seconds}.{tenths_of_seconds}')
+  request = ApprovalRequest(ctx, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
   await bingoutils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

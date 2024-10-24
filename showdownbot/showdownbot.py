@@ -24,12 +24,13 @@ class ShowdownBot:
     with open('bingo-info/teams.json') as teamsFile:
       teamInfo = json.load(teamsFile)
     self.discordUserTeams = {}
-    for team in teamInfo:
-      for player in team['players']:
-        self.discordUserTeams[player['tag']] = team['name']
+    self.discordUserRSNs = {}
     self.teamSubmissionChannels = {}
     for team in teamInfo:
       self.teamSubmissionChannels[team['name']] = team['submissionChannel']
+      for player in team['players']:
+        self.discordUserRSNs[player['tag']] = player['name']
+        self.discordUserTeams[player['tag']] = team['name']
 
     # Load monster info
     monsterInfo = []
@@ -59,7 +60,7 @@ class ShowdownBot:
         await ctx.response.send_message(f'Error: {str(error.original)}')
       else:
         logging.error('Error', exc_info=error)
-        request = approvalrequest.ApprovalRequest(ctx)
+        request = approvalrequest.ApprovalRequest(self, ctx)
         channel = self.bot.get_channel(self.errorsChannelId)
         errorText = 'Unexpected error during processing of a command:\n'
         errorText += str(request) + '\n'
@@ -100,7 +101,7 @@ class ShowdownBot:
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
         raise errors.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(ctx, f'{kc} KC of {monster}')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{kc} KC of {monster}')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -111,7 +112,7 @@ class ShowdownBot:
     async def submit_collection_log(ctx: Interaction, screenshot: Attachment, item: str):
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(ctx, f'Collection log item "{item}"')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'Collection log item "{item}"')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -121,7 +122,7 @@ class ShowdownBot:
     async def submit_pest_control(ctx: Interaction, screenshot: Attachment, total_games: int):
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, f'{total_games} games of pest control')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{total_games} games of pest control')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -131,7 +132,7 @@ class ShowdownBot:
     async def submit_lms(ctx: Interaction, screenshot: Attachment, kills: int):
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, f'{kills} kills in LMS')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{kills} kills in LMS')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -141,7 +142,7 @@ class ShowdownBot:
     async def submit_mta(ctx: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -151,7 +152,7 @@ class ShowdownBot:
     async def submit_tithe_farm(ctx: Interaction, screenshot: Attachment, points: int):
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, f'{points} tithe farm points')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{points} tithe farm points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -161,7 +162,7 @@ class ShowdownBot:
     async def submit_farming_contracts(ctx: Interaction, screenshot: Attachment, contracts: int):
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, f'{contracts} farming contracts')
+      request = approvalrequest.ApprovalRequest(self, ctx, f'{contracts} farming contracts')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -188,7 +189,7 @@ class ShowdownBot:
       for argValue in argValues:
         if(isinstance(argValue, int) and argValue < 0):
           raise errors.BingoUserError('BA arguments cannot be negative')
-      request = approvalrequest.ApprovalRequest(ctx, 'BA points')
+      request = approvalrequest.ApprovalRequest(self, ctx, 'BA points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
@@ -200,7 +201,7 @@ class ShowdownBot:
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
         raise errors.BingoUserError('tenths_of_seconds cannot be greater than 9')
-      request = approvalrequest.ApprovalRequest(ctx, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
+      request = approvalrequest.ApprovalRequest(self, ctx, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)

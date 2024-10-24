@@ -15,8 +15,10 @@ handlers['submit_challenge'] = approvalhandlers.ChallengeHandler()
 
 # Represents an approval request
 class ApprovalRequest():
-  def __init__(self, ctx: Interaction, shortDesc = None):
+  def __init__(self, showdownBot, ctx: Interaction, shortDesc = None):
+    self.showdownBot = showdownBot
     self.user = ctx.user
+    self.rsn = self.showdownBot.discordUserRSNs[self.user.name]
     self.commandName = ctx.command.name
     self.params = {}
     self.approvalHandler = handlers[self.commandName]
@@ -28,7 +30,7 @@ class ApprovalRequest():
         self.params[param['name']] = str(param['value'])
 
   def __str__(self):
-    requestText = 'User: ' + self.user.name + '\n'
+    requestText = 'RSN: ' + self.rsn + '\n'
     requestText += 'Command: /' + self.commandName
     for paramName in self.params:
       requestText += '\n' + paramName + ': ' + self.params[paramName]

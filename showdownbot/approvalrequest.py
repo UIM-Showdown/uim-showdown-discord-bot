@@ -1,17 +1,17 @@
 from discord import Interaction
-from approvalhandlers import *
+import showdownbot.approvalhandlers as approvalhandlers
 
 # Register approval handlers here
 handlers = {}
-handlers['submit_monster_killcount'] = monsterkchandler.MonsterKCHandler()
-handlers['submit_collection_log'] = cloghandler.ClogHandler()
-handlers['submit_pest_control'] = pestcontrolhandler.PestControlHandler()
-handlers['submit_lms'] = lmshandler.LMSHandler()
-handlers['submit_mta'] = mtahandler.MTAHandler()
-handlers['submit_tithe_farm'] = tithefarmhandler.TitheFarmHandler()
-handlers['submit_farming_contracts'] = farmingcontractshandler.FarmingContractsHandler()
-handlers['submit_barbarian_assault'] = bahandler.BAHandler()
-handlers['submit_challenge'] = challengehandler.ChallengeHandler()
+handlers['submit_monster_killcount'] = approvalhandlers.MonsterKCHandler()
+handlers['submit_collection_log'] = approvalhandlers.ClogHandler()
+handlers['submit_pest_control'] = approvalhandlers.PestControlHandler()
+handlers['submit_lms'] = approvalhandlers.LMSHandler()
+handlers['submit_mta'] = approvalhandlers.MTAHandler()
+handlers['submit_tithe_farm'] = approvalhandlers.TitheFarmHandler()
+handlers['submit_farming_contracts'] = approvalhandlers.FarmingContractsHandler()
+handlers['submit_barbarian_assault'] = approvalhandlers.BAHandler()
+handlers['submit_challenge'] = approvalhandlers.ChallengeHandler()
 
 # Represents an approval request
 class ApprovalRequest():
@@ -36,6 +36,3 @@ class ApprovalRequest():
 
   def approve(self):
     self.approvalHandler.requestApproved(self)
-  
-  def deny(self):
-    print('Denied request: \n' + str(self))

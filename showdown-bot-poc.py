@@ -128,7 +128,7 @@ async def submit_barbarian_assault(ctx: Interaction, clog_screenshot: Attachment
 
 @bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
 async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
-  if(minutes < 0 or seconds < 0 or tenthsOfSeconds < 0):
+  if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
     raise bingoutils.BingoUserError('Times cannot be negative')
   request = ApprovalRequest(ctx, f'{challenge} time of {minutes}:{seconds}.{tenths_of_seconds}')
   await bingoutils.requestApproval(bot, request)

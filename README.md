@@ -14,6 +14,9 @@ A POC for a Python version of the UIM Showdown Discord bot
   * Linux: `python3 -m pip install -U audioop-lts`
 * Create a config.ini file at the root of the project directory (format documented below)
 * Verify that the contents of the bingo-info directory are up to date
+* Update the command list in the server:
+  * Windows: `py -3 ./showdown-bot-poc.py --updatecommands`
+  * Linux: `python3 ./showdown-bot-poc.py --updatecommands`
 * Run the bot:
   * Windows: `py -3 ./showdown-bot-poc.py`
   * Linux: `python3 ./showdown-bot-poc.py`

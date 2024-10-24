@@ -55,7 +55,17 @@ class ShowdownBot:
     # Register callback for all errors thrown out of command methods
     @self.bot.tree.error
     async def handleCommandErrors(ctx, error):
-      await self.handleCommandError(self.bot, ctx, error)
+      if(isinstance(error.original, bingousererror.BingoUserError)):
+        await ctx.response.send_message(f'Error: {str(error.original)}')
+      else:
+        logging.error('Error', exc_info=error)
+        request = approvalrequest.ApprovalRequest(ctx)
+        channel = self.bot.get_channel(self.errorsChannelId)
+        errorText = 'Unexpected error during processing of a command:\n'
+        errorText += str(request) + '\n'
+        errorText += f'Error: {str(error.original)}'
+        await channel.send(errorText)
+        await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
 
     # Set up monster/clog autocomplete callbacks
     async def monster_autocomplete(
@@ -207,19 +217,6 @@ class ShowdownBot:
 
   def getAttachmentsFromContext(self, ctx):
     return list(ctx.data['resolved']['attachments'].values())
-  
-  async def handleCommandError(self, ctx, error):
-    if(isinstance(error.original, bingousererror.BingoUserError)):
-      await ctx.response.send_message(f'Error: {str(error.original)}')
-    else:
-      logging.error('Error', exc_info=error)
-      request = approvalrequest.ApprovalRequest(ctx)
-      channel = self.bot.get_channel(self.errorsChannelId)
-      errorText = 'Unexpected error during processing of a command:\n'
-      errorText += str(request) + '\n'
-      errorText += f'Error: {str(error.original)}'
-      await channel.send(errorText)
-      await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
 
   async def requestApproval(self, bot, request):
     channel = bot.get_channel(self.approvalsChannelId)

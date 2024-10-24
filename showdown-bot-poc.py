@@ -53,7 +53,7 @@ async def submit_collection_log(ctx: Interaction, screenshot: Attachment, item: 
 async def submit_pest_control(ctx: Interaction, screenshot: Attachment, total_games: int):
   if(total_games < 0):
     raise bingoutils.BingoUserError('Total games cannot be negative')
-  request = ApprovalRequest(ctx, f'{totalGames} games of pest control')
+  request = ApprovalRequest(ctx, f'{total_games} games of pest control')
   await bingoutils.requestApproval(bot, request)
   responseText = 'Request received:\n'
   responseText += str(request)

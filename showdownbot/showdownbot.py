@@ -53,6 +53,10 @@ class ShowdownBot:
     intents.message_content = True # Required for the commands extension to work
     self.bot = commands.Bot(command_prefix='/', intents=intents)
 
+    async def checkForValidPlayer(ctx):
+      if(ctx.user.name not in self.discordUserRSNs):
+        raise errors.BingoUserError('User is not a registered player in this event')
+
     # Register callback for all errors thrown out of command methods
     @self.bot.tree.error
     async def handleCommandErrors(ctx, error):
@@ -97,6 +101,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
     @app_commands.autocomplete(monster=monster_autocomplete)
     async def submit_monster_killcount(ctx: Interaction, screenshot: Attachment, monster: str, kc: int):
+      await checkForValidPlayer(ctx)
       if(kc < 0):
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
@@ -110,6 +115,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
     @app_commands.autocomplete(item=clog_autocomplete)
     async def submit_collection_log(ctx: Interaction, screenshot: Attachment, item: str):
+      await checkForValidPlayer(ctx)
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
       request = approvalrequest.ApprovalRequest(self, ctx, f'Collection log item "{item}"')
@@ -120,6 +126,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
     async def submit_pest_control(ctx: Interaction, screenshot: Attachment, total_games: int):
+      await checkForValidPlayer(ctx)
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
       request = approvalrequest.ApprovalRequest(self, ctx, f'{total_games} games of pest control')
@@ -130,6 +137,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
     async def submit_lms(ctx: Interaction, screenshot: Attachment, kills: int):
+      await checkForValidPlayer(ctx)
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
       request = approvalrequest.ApprovalRequest(self, ctx, f'{kills} kills in LMS')
@@ -140,6 +148,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
     async def submit_mta(ctx: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
+      await checkForValidPlayer(ctx)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
       request = approvalrequest.ApprovalRequest(self, ctx, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
@@ -150,6 +159,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
     async def submit_tithe_farm(ctx: Interaction, screenshot: Attachment, points: int):
+      await checkForValidPlayer(ctx)
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
       request = approvalrequest.ApprovalRequest(self, ctx, f'{points} tithe farm points')
@@ -160,6 +170,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
     async def submit_farming_contracts(ctx: Interaction, screenshot: Attachment, contracts: int):
+      await checkForValidPlayer(ctx)
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
       request = approvalrequest.ApprovalRequest(self, ctx, f'{contracts} farming contracts')
@@ -185,6 +196,7 @@ class ShowdownBot:
       gloves: int = 0,
       boots: int = 0
     ):
+      await checkForValidPlayer(ctx)
       argValues = [locals()[param.name] for param in submit_barbarian_assault.parameters]
       for argValue in argValues:
         if(isinstance(argValue, int) and argValue < 0):
@@ -197,6 +209,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
     async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
+      await checkForValidPlayer(ctx)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):

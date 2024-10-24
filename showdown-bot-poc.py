@@ -1,5 +1,6 @@
 import argparse
 import bingoutils
+import os
 from discord.ext import commands
 from discord import app_commands, Intents, Interaction, Attachment
 from typing import Literal, Optional
@@ -10,7 +11,7 @@ parser = argparse.ArgumentParser(
   prog = 'Showdown Bot POC',
   description = 'POC for the UIM Showdown bot'
 )
-parser.add_argument('--test', action='store_true')
+parser.add_argument('--updatecommands', action='store_true')
 commandLineArgs = parser.parse_args()
 
 # Set up bot object
@@ -135,17 +136,13 @@ async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: in
   responseText += str(request)
   await ctx.response.send_message(responseText)
 
-# Command to sync command changes
-# DO NOT SPAM THIS; the sync command does not properly report rate limiting responses
-@bot.tree.command(name='sync', description='Sync command changes - DO NOT SPAM THIS')
-@commands.guild_only()
-@app_commands.checks.has_role('Event staff')
-async def sync(ctx: Interaction):
-  synced = await bot.tree.sync()
-  await ctx.response.send_message(f"Synced {len(synced)} commands.")
-
 @bot.event
 async def on_ready():
   print(f'Logged in as {bot.user.name}')
+  if(commandLineArgs.updatecommands):
+    print('Updating commands...')
+    synced = await bot.tree.sync()
+    print(f'Synced {len(synced)} commands.')
+    os._exit(0)
 
 bot.run(bingoutils.token)

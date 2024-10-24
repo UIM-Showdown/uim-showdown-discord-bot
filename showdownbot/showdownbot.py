@@ -233,7 +233,6 @@ class ShowdownBot:
     return list(ctx.data['resolved']['attachments'].values())
 
   async def requestApproval(self, request):
-    channel = self.bot.get_channel(self.approvalsChannelId)
     requestText = 'New approval requested:\n'
     requestText += str(request)
     view = ui.View()

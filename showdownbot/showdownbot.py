@@ -3,7 +3,7 @@ import logging
 import os
 from discord.ext import commands
 from discord import Intents, ui, app_commands, Interaction, Attachment
-from typing import Literal
+from typing import Literal, Optional
 import showdownbot.errors as errors
 import showdownbot.approvalrequest as approvalrequest
 import showdownbot.buttons as buttons
@@ -18,6 +18,7 @@ class ShowdownBot:
     self.approvalsChannelId = int(bingoProperties['approvalsChannelId'])
     self.errorsChannelId = int(bingoProperties['errorsChannelId'])
     self.guildId = int(bingoProperties['guildId'])
+    self.spreadsheetId = bingoProperties['spreadsheetId']
 
     # Load team info
     teamInfo = []
@@ -65,12 +66,7 @@ class ShowdownBot:
       else:
         logging.error('Error', exc_info=error)
         request = approvalrequest.ApprovalRequest(self, ctx)
-        channel = self.bot.get_channel(self.errorsChannelId)
-        errorText = 'Unexpected error during processing of a command:\n'
-        errorText += str(request) + '\n'
-        errorText += f'Error: {str(error.original)}'
-        await channel.send(errorText)
-        await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
+        await self.sendErrorMessageToErrorChannel(ctx, request, error)
 
     # Set up monster/clog autocomplete callbacks
     async def monster_autocomplete(
@@ -179,22 +175,22 @@ class ShowdownBot:
       responseText += str(request)
       await ctx.response.send_message(responseText)
 
-    @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo! (Make sure to check the optional arguments)')
+    @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo!')
     async def submit_barbarian_assault(ctx: Interaction, clog_screenshot: Attachment, blackboard_screenshot: Attachment,
-      high_gambles: int = 0,
-      attacker_points: int = 0,
-      defender_points: int = 0,
-      collector_points: int = 0,
-      healer_points: int = 0,
-      attacker_level: int = 0,
-      defender_level: int = 0,
-      collector_level: int = 0,
-      healer_level: int = 0,
-      hats: int = 0,
-      torso: int = 0,
-      skirt: int = 0,
-      gloves: int = 0,
-      boots: int = 0
+      high_gambles: int,
+      attacker_points: int,
+      defender_points: int,
+      collector_points: int,
+      healer_points: int,
+      attacker_level: int,
+      defender_level: int,
+      collector_level: int,
+      healer_level: int,
+      hats: int,
+      torso: int,
+      skirt: int,
+      gloves: int,
+      boots: int
     ):
       await checkForValidPlayer(ctx)
       argValues = [locals()[param.name] for param in submit_barbarian_assault.parameters]
@@ -228,6 +224,19 @@ class ShowdownBot:
         synced = await self.bot.tree.sync()
         print(f'Synced {len(synced)} commands.')
         os._exit(0)
+  
+  async def sendErrorMessageToErrorChannel(self, ctx, request, error):
+      errorText = 'Unexpected error occurred:\n'
+      if(request):
+        errorText += 'Processing request: \n' + str(request) + '\n'
+      if(hasattr(error, 'original')):
+        errorText += f'Error: {str(error.original)}'
+      else:
+        errorText += f'Error: {str(error)}'
+      channel = self.bot.get_channel(self.errorsChannelId)
+      await channel.send(errorText)
+      if(ctx):
+        await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
 
   def getAttachmentsFromContext(self, ctx):
     return list(ctx.data['resolved']['attachments'].values())

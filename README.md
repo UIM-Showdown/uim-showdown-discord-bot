@@ -12,7 +12,11 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Bug workaround in discord.py as of 10/23: Install the "audioop-lts" package via pip:
   * Windows: `py -3 -m pip install -U audioop-lts`
   * Linux: `python3 -m pip install -U audioop-lts`
+* Install the Google APIs via pip:
+  * Windows: `py -3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
+  * Linux: `python3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
 * Create a config.ini file at the root of the project directory (format documented below)
+* Download the credential file for the Google Cloud service account for interacting with the Google Sheet, and save it to the directory as "google-creds.json"
 * Verify that the contents of the bingo-info directory are up to date
 * Update the command list in the server:
   * Windows: `py -3 ./showdown-bot-poc.py --updatecommands`
@@ -88,4 +92,5 @@ token = <API token goes here>
 approvalsChannelId = <Channel ID for the approvals channel goes here>
 errorsChannelId = <Channel ID for the errors channel goes here>
 guildId = <Discord server ID goes here>
+spreadsheetId = <Google Sheets spreadsheet ID goes here>
 ```

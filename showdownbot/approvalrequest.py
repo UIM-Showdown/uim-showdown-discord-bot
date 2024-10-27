@@ -19,6 +19,8 @@ class ApprovalRequest():
     self.showdownBot = showdownBot
     self.user = ctx.user
     self.rsn = self.showdownBot.discordUserRSNs[self.user.name]
+    self.team = self.showdownBot.discordUserTeams[self.user.name]
+    self.spreadsheetId = self.showdownBot.spreadsheetId
     self.commandName = ctx.command.name
     self.params = {}
     self.approvalHandler = handlers[self.commandName]
@@ -36,5 +38,5 @@ class ApprovalRequest():
       requestText += '\n' + paramName + ': ' + self.params[paramName]
     return requestText
 
-  def approve(self):
-    self.approvalHandler.requestApproved(self)
+  async def approve(self):
+    await self.approvalHandler.requestApproved(self)

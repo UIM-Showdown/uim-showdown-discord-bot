@@ -193,8 +193,9 @@ class ShowdownBot:
 
     @self.bot.event
     async def on_ready():
-
       print(f'Logged in as {self.bot.user.name}')
+
+      # Check for alternate run commands
       if(commandLineArgs.updatecommands):
         print('Updating commands...')
         synced = await self.bot.tree.sync()
@@ -227,6 +228,7 @@ class ShowdownBot:
           os._exit(0)
 
       # Load bingo info
+      print('Loading bingo info...')
       guild = self.bot.get_guild(self.guildId)
       channels = guild.channels
       self.discordUserTeams = {}
@@ -248,6 +250,8 @@ class ShowdownBot:
         for player in teamRosters[teamName]:
           self.discordUserRSNs[player['discordName']] = player['rsn']
           self.discordUserTeams[player['discordName']] = teamName
+
+      print('Ready to accept commands!')
   
   async def setUpServer(self):
     teamInfo = self.googleSheetClient.getTeamInfo()
@@ -412,17 +416,17 @@ class ShowdownBot:
           await member.add_roles(competitorRole)
 
   async def sendErrorMessageToErrorChannel(self, ctx, request, error):
-      errorText = 'Unexpected error occurred:\n'
-      if(request):
-        errorText += 'Processing request: \n' + str(request) + '\n'
-      if(hasattr(error, 'original')):
-        errorText += f'Error: {str(error.original)}'
-      else:
-        errorText += f'Error: {str(error)}'
-      channel = self.bot.get_channel(self.errorsChannelId)
-      await channel.send(errorText)
-      if(ctx):
-        await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
+    errorText = 'Unexpected error occurred:\n'
+    if(request):
+      errorText += 'Processing request: \n' + str(request) + '\n'
+    if(hasattr(error, 'original')):
+      errorText += f'Error: {str(error.original)}'
+    else:
+      errorText += f'Error: {str(error)}'
+    channel = self.bot.get_channel(self.errorsChannelId)
+    await channel.send(errorText)
+    if(ctx):
+      await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
 
   def getAttachmentsFromContext(self, ctx):
     return list(ctx.data['resolved']['attachments'].values())

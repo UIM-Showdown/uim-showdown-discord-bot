@@ -20,7 +20,6 @@ class ApprovalRequest():
     self.user = ctx.user
     self.rsn = self.showdownBot.discordUserRSNs[self.user.name]
     self.team = self.showdownBot.discordUserTeams[self.user.name]
-    self.spreadsheetId = self.showdownBot.spreadsheetId
     self.commandName = ctx.command.name
     self.params = {}
     self.approvalHandler = handlers[self.commandName]

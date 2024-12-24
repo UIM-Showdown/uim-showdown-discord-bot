@@ -2,11 +2,12 @@ import json
 import logging
 import os
 from discord.ext import commands
-from discord import Intents, ui, app_commands, Interaction, Attachment
-from typing import Literal, Optional
+from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite
+from typing import Literal
 import showdownbot.errors as errors
 import showdownbot.approvalrequest as approvalrequest
 import showdownbot.buttons as buttons
+from showdownbot.googlesheetclient import GoogleSheetClient
 
 class ShowdownBot:
     
@@ -18,39 +19,13 @@ class ShowdownBot:
     self.approvalsChannelId = int(bingoProperties['approvalsChannelId'])
     self.errorsChannelId = int(bingoProperties['errorsChannelId'])
     self.guildId = int(bingoProperties['guildId'])
-    self.spreadsheetId = bingoProperties['spreadsheetId']
-
-    # Load team info
-    teamInfo = []
-    with open('bingo-info/teams.json') as teamsFile:
-      teamInfo = json.load(teamsFile)
-    self.discordUserTeams = {}
-    self.discordUserRSNs = {}
-    self.teamSubmissionChannels = {}
-    for team in teamInfo:
-      self.teamSubmissionChannels[team['name']] = team['submissionChannel']
-      for player in team['players']:
-        self.discordUserRSNs[player['tag']] = player['name']
-        self.discordUserTeams[player['tag']] = team['name']
-
-    # Load monster info
-    monsterInfo = []
-    with open('bingo-info/monsters.json') as monstersFile:
-      monsterInfo = json.load(monstersFile)
-    self.monsters = []
-    for monster in monsterInfo:
-      self.monsters.append(monster['name'])
-
-    # Load clog info
-    clogInfo = []
-    with open('bingo-info/collection-log-items.json') as clogFile:
-      clogInfo = json.load(clogFile)
-    self.clogItems = []
-    for clogItem in clogInfo:
-      self.clogItems.append(clogItem['name'])
+    self.submissionSheetId = bingoProperties['submissionSheetId']
+    self.bingoInfoSheetId = bingoProperties['bingoInfoSheetId']
+    self.googleSheetClient = GoogleSheetClient(self.submissionSheetId, self.bingoInfoSheetId)
 
     # Set up bot object
     intents = Intents.default()
+    intents.members = True # Required for role assignments to work
     intents.message_content = True # Required for the commands extension to work
     self.bot = commands.Bot(command_prefix='/', intents=intents)
 
@@ -218,13 +193,224 @@ class ShowdownBot:
 
     @self.bot.event
     async def on_ready():
+
       print(f'Logged in as {self.bot.user.name}')
       if(commandLineArgs.updatecommands):
         print('Updating commands...')
         synced = await self.bot.tree.sync()
         print(f'Synced {len(synced)} commands.')
         os._exit(0)
+      if(commandLineArgs.updatesignuproles):
+        print('Updating signup roles...')
+        await self.updateSignupRoles()
+        print('Signup roles updated')
+        os._exit(0)
+      if(commandLineArgs.setupserver):
+        response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
+        if(response.lower() == 'y'):
+          print('Starting server setup...')
+          await self.setUpServer()
+          print('Server setup completed')
+          os._exit(0)
+        else:
+          print('Exiting...')
+          os._exit(0)
+      if(commandLineArgs.teardownserver):
+        response = input('Are you sure you want to DELETE ALL THE TEAM CHANNELS AND ROLES? This is very dangerous (Y/N): ')
+        if(response.lower() == 'y'):
+          print('Starting server teardown...')
+          await self.tearDownServer()
+          print('Server teardown completed')
+          os._exit(0)
+        else:
+          print('Exiting...')
+          os._exit(0)
+
+      # Load bingo info
+      guild = self.bot.get_guild(self.guildId)
+      channels = guild.channels
+      self.discordUserTeams = {}
+      self.discordUserRSNs = {}
+      self.teamSubmissionChannels = {}
+      self.monsters = self.googleSheetClient.getMonsters()
+      self.clogItems = self.googleSheetClient.getClogItems()
+      teamRosters = self.googleSheetClient.getTeamRosters()
+      teamInfo = self.googleSheetClient.getTeamInfo()
+      for teamName in teamRosters:
+        teamTag = teamInfo[teamName]['tag']
+        teamBotSubmissionChannelName = teamTag.lower() + '-bot-submissions'
+        for channel in channels:
+          if(channel.name == teamBotSubmissionChannelName):
+            self.teamSubmissionChannels[teamName] = channel
+        if(teamName not in self.teamSubmissionChannels):
+          print('Could not find channel named ' + teamBotSubmissionChannelName + '. The server might not have been set up correctly. Exiting...')
+          os._exit(1)
+        for player in teamRosters[teamName]:
+          self.discordUserRSNs[player['discordName']] = player['rsn']
+          self.discordUserTeams[player['discordName']] = teamName
   
+  async def setUpServer(self):
+    teamInfo = self.googleSheetClient.getTeamInfo()
+    teamRosters = self.googleSheetClient.getTeamRosters()
+    guild = self.bot.get_guild(self.guildId)
+    roles = guild.roles
+    channels = guild.channels
+    eventStaffRole = None
+    for role in roles:
+      if(role.name == 'Event staff'):
+        eventStaffRole = role
+    if(eventStaffRole is None):
+      print('Could not find event staff role. Exiting...')
+      os._exit(1)
+
+
+    for teamName in teamInfo:
+      # Create team role
+      teamRole = None
+      for role in roles:
+        if(role.name == teamName):
+          teamRole = role
+      if(teamRole is None):
+        teamRole = await guild.create_role(
+          name = teamName,
+          color = Colour.from_str(teamInfo[teamName]['color'])
+        )
+
+      # Create team category
+      category = None
+      for channel in channels:
+        if(isinstance(channel, CategoryChannel) and channel.name == teamName):
+          category = channel
+      if(category is None):
+        category = await guild.create_category(
+          name = teamName,
+          overwrites = {
+            guild.default_role: PermissionOverwrite(view_channel = False),
+            teamRole: PermissionOverwrite(view_channel = True),
+            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True)
+          }
+        )
+
+      # Create general text channel
+      generalTextChannel = None
+      generalTextChannelName = teamInfo[teamName]['tag'].lower() + '-general'
+      for channel in channels:
+        if(isinstance(channel, TextChannel) and channel.name == generalTextChannelName):
+          generalTextChannel = channel
+      if(generalTextChannel is None):
+        generalTextChannel = await guild.create_text_channel(
+          name = generalTextChannelName,
+          category = category
+        )
+      
+      # Create general voice channel
+      generalVoiceChannel = None
+      generalVoiceChannelName = teamInfo[teamName]['tag'].lower() + '-general'
+      for channel in channels:
+        if(isinstance(channel, VoiceChannel) and channel.name == generalVoiceChannelName):
+          generalVoiceChannel = channel
+      if(generalVoiceChannel is None):
+        generalVoiceChannel = await guild.create_voice_channel(
+          name = generalVoiceChannelName,
+          category = category
+        )
+      
+      # Create bot submissions channel
+      botSubmissionsChannel = None
+      botSubmissionsChannelName = teamInfo[teamName]['tag'].lower() + '-bot-submissions'
+      for channel in channels:
+        if(isinstance(channel, TextChannel) and channel.name == botSubmissionsChannelName):
+          botSubmissionsChannel = channel
+      if(botSubmissionsChannel is None):
+        botSubmissionsChannel = await guild.create_text_channel(
+          name = botSubmissionsChannelName,
+          category = category
+        )
+
+      # Assign team roles to players
+      teamRoster = teamRosters[teamName]
+      for player in teamRoster:
+        member = guild.get_member_named(player['discordName'])
+        if(member is None):
+          print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+        if(not member.get_role(teamRole.id)):
+          await member.add_roles(teamRole)
+
+  async def tearDownServer(self):
+    teamInfo = self.googleSheetClient.getTeamInfo()
+    guild = self.bot.get_guild(self.guildId)
+    roles = guild.roles
+    channels = guild.channels
+    signupRole = None
+    competitorRole = None
+    for role in roles:
+      if(role.name == 'Signup'):
+        signupRole = role
+      if(role.name == 'Competitor'):
+        competitorRole = role
+    if(signupRole is None):
+      print('Could not find role named "Signup". Exiting...')
+      os._exit(1)
+    if(competitorRole is None):
+      print('Could not find role named "Competitor". Exiting...')
+      os._exit(1)
+    
+    for teamName in teamInfo:
+      # Delete team channels
+      for channel in channels:
+        if(isinstance(channel, CategoryChannel) and channel.name == teamName):
+          category = channel
+          for channelInCategory in category.channels:
+            await channelInCategory.delete()
+          await category.delete()
+
+      # Delete team role
+      for role in roles:
+        if(role.name == teamName):
+          await role.delete()
+
+    # De-assign signup/competitor roles
+    for member in guild.members:
+      if(member.get_role(signupRole.id)):
+        await member.remove_roles(signupRole)
+      if(member.get_role(competitorRole.id)):
+        await member.remove_roles(competitorRole)
+
+  async def updateSignupRoles(self):
+    signedUpDiscordMembers = self.googleSheetClient.getSignedUpDiscordMembers()
+    teamRosters = self.googleSheetClient.getTeamRosters()
+    guild = self.bot.get_guild(self.guildId)
+    roles = guild.roles
+    signupRole = None
+    competitorRole = None
+    for role in roles:
+      if(role.name == 'Signup'):
+        signupRole = role
+      if(role.name == 'Competitor'):
+        competitorRole = role
+    if(signupRole is None):
+      print('Could not find role named "Signup". Exiting...')
+      os._exit(1)
+    if(competitorRole is None):
+      print('Could not find role named "Competitor". Exiting...')
+      os._exit(1)
+
+    for signedUpDiscordMember in signedUpDiscordMembers:
+      member = guild.get_member_named(signedUpDiscordMember)
+      if(member is None):
+        print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+      if(not member.get_role(signupRole.id)):
+        await member.add_roles(signupRole)
+
+    for teamName in teamRosters:
+      teamRoster = teamRosters[teamName]
+      for player in teamRoster:
+        member = guild.get_member_named(player['discordName'])
+        if(member is None):
+          print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+        if(not member.get_role(competitorRole.id)):
+          await member.add_roles(competitorRole)
+
   async def sendErrorMessageToErrorChannel(self, ctx, request, error):
       errorText = 'Unexpected error occurred:\n'
       if(request):

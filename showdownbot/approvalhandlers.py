@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-import time
 
 
 # ABC for approval handlers. The requestApproved method on the extending class should 
@@ -16,20 +12,9 @@ class ApprovalHandler(ABC):
   async def requestApproved(self, request):
     pass
 
-  def appendToGoogleSheet(self, range, row, spreadsheetId):
-    creds = service_account.Credentials.from_service_account_file('google-creds.json', scopes=['https://www.googleapis.com/auth/spreadsheets'])
-    with build('sheets', 'v4', credentials=creds) as service:
-      spreadsheets = service.spreadsheets()
-      spreadsheets.values().append(
-        spreadsheetId = spreadsheetId,
-        range = range,
-        body = {'majorDimension': 'ROWS', 'values': [row]},
-        valueInputOption = 'USER_ENTERED'
-      ).execute()
-
 class BAHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'BAPointDump!A:K',
       [
         request.user.name,
@@ -43,10 +28,9 @@ class BAHandler(ApprovalHandler):
         request.params['defender_level'],
         request.params['collector_level'],
         request.params['healer_level']
-      ],
-      request.spreadsheetId
+      ]
     )
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'BAColLogDump!A:K',
       [
         request.user.name,
@@ -57,13 +41,12 @@ class BAHandler(ApprovalHandler):
         int(request.params['torso']) + int(request.params['skirt']),
         request.params['gloves'],
         request.params['boots']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class ChallengeHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'ChallengesDump!A:F',
       [
         request.user.name,
@@ -72,26 +55,24 @@ class ChallengeHandler(ApprovalHandler):
         None,
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class ClogHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'CLogBotDump!A:D',
       [
         request.user.name,
         request.team,
         request.params['item'],
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class FarmingContractsHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'FarmingDump!A:E',
       [
         request.user.name,
@@ -99,13 +80,12 @@ class FarmingContractsHandler(ApprovalHandler):
         request.params['contracts'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class LMSHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -113,13 +93,12 @@ class LMSHandler(ApprovalHandler):
         request.params['kills'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class MonsterKCHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MonKCBotDump!A:E',
       [
         request.user.name,
@@ -127,13 +106,12 @@ class MonsterKCHandler(ApprovalHandler):
         request.params['kc'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class MTAHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -141,10 +119,9 @@ class MTAHandler(ApprovalHandler):
         request.params['alchemy_points'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -152,10 +129,9 @@ class MTAHandler(ApprovalHandler):
         request.params['graveyard_points'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -163,10 +139,9 @@ class MTAHandler(ApprovalHandler):
         request.params['enchanting_points'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -174,13 +149,12 @@ class MTAHandler(ApprovalHandler):
         request.params['telekinetic_points'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class PestControlHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'MinigameBotDump!A:E',
       [
         request.user.name,
@@ -188,13 +162,12 @@ class PestControlHandler(ApprovalHandler):
         request.params['total_games'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )
 
 class TitheFarmHandler(ApprovalHandler):
   async def requestApproved(self, request):
-    self.appendToGoogleSheet(
+    request.showdownBot.googleSheetClient.appendSubmission(
       'FarmingDump!A:E',
       [
         request.user.name,
@@ -202,6 +175,5 @@ class TitheFarmHandler(ApprovalHandler):
         request.params['points'],
         request.team,
         request.params['screenshot']
-      ],
-      request.spreadsheetId
+      ]
     )

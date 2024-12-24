@@ -11,7 +11,7 @@ class ApproveButton(ui.Button):
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request approved')
     team = self.showdownBot.discordUserTeams[ctx.user.name]
-    submissionsChannel = self.showdownBot.bot.get_channel(self.showdownBot.teamSubmissionChannels[team])
+    submissionsChannel = self.showdownBot.teamSubmissionChannels[team]
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been approved')
     try:
       await self.approvalRequest.approve()
@@ -30,5 +30,5 @@ class DenyButton(ui.Button):
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
     team = self.showdownBot.discordUserTeams[ctx.user.name]
-    submissionsChannel = self.showdownBot.bot.get_channel(self.showdownBot.teamSubmissionChannels[team])
+    submissionsChannel = self.showdownBot.teamSubmissionChannels[team]
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been denied')

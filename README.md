@@ -139,5 +139,5 @@ approvalsChannelId = <Channel ID for the approvals channel goes here>
 errorsChannelId = <Channel ID for the errors channel goes here>
 guildId = <Discord server ID goes here>
 submissionSheetId = <Google Sheets spreadsheet ID for player submissions goes here>
-bingoInfoSheetId = <Google Sheets spreadsheet ID for player signups and team rosters goes here>
+bingoInfoSheetId = <Google Sheets spreadsheet ID for signup/team/other info goes here>
 ```

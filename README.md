@@ -120,13 +120,21 @@ The following are the required permissions for the bot:
 
 ## Adding a command
 
-* Add a function to the ShowdownBot constructor annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.requestApproval(), and then send a message back with request info.
+* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.requestApproval(), and then send a message back with request info.
 * Create an approval handler class in approvalhandlers.py. This class's requestApproved() method handles any non-Discord-facing actions that must be taken when the request is approved.
 * Assign the approval handler to the command at the top of approvalrequest.py.
 * Everything outside of input validation and approval handling is already handled by the bot's core code.
 * To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdown-bot-poc.py --updatecommands`
   * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
   * This is not necessary for changes to the code within a command; it is only needed when adding a new command, or changing the syntax of a command (i.e. what parameters it takes)
+
+## Changing team rosters (e.g. after a trade or replacement)
+
+The bot does *not* handle this automatically, you will need to do most of it manually:
+
+* Modify the Discord roles for the relevant players as needed
+* Modify the "Team Rosters" tab of the bingo info sheet as needed
+* If the bot is currently running, restart it so it can pull the new version of the sheet
 
 ## config.ini format
 

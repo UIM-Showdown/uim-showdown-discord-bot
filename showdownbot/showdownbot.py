@@ -132,6 +132,7 @@ class ShowdownBot:
         member = guild.get_member_named(player['discordName'])
         if(member is None):
           print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+          continue
         if(not member.get_role(teamRole.id)):
           await member.add_roles(teamRole)
 
@@ -203,7 +204,8 @@ class ShowdownBot:
     for signedUpDiscordMember in signedUpDiscordMembers:
       member = guild.get_member_named(signedUpDiscordMember)
       if(member is None):
-        print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+        print('Could not find Discord server member named "' + signedUpDiscordMember + '". Continuing...')
+        continue
       if(not member.get_role(signupRole.id)):
         await member.add_roles(signupRole)
 
@@ -213,6 +215,7 @@ class ShowdownBot:
         member = guild.get_member_named(player['discordName'])
         if(member is None):
           print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+          continue
         if(not member.get_role(competitorRole.id)):
           await member.add_roles(competitorRole)
 

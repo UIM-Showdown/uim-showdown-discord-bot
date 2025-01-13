@@ -29,7 +29,7 @@ class GoogleSheetClient():
         range = 'Team Rosters!A:C'
       ).execute().get('values', [])
       for row in rows:
-        if(row[0] == 'Discord Name' and row[1] == 'RSN' and row[2] == 'Team'):
+        if(row[0] == 'Discord Name' and row[1] == 'RSN' and row[2] == 'Team'): # This is the header row
           continue
         if(row[2] not in rosters):
           rosters[row[2]] = [{'discordName': row[0], 'rsn': row[1]}]
@@ -47,7 +47,7 @@ class GoogleSheetClient():
         range = 'Team Info!A:C'
       ).execute().get('values', [])
       for row in rows:
-        if(row[0] == 'Team Name' and row[1] == 'Tag' and row[2] == 'Color'):
+        if(row[0] == 'Team Name' and row[1] == 'Tag' and row[2] == 'Color'): # This is the header row
           continue
         if(row[0] not in teamInfo):
           teamInfo[row[0]] = {'tag': row[1], 'color': row[2]}
@@ -62,10 +62,10 @@ class GoogleSheetClient():
       spreadsheets = service.spreadsheets()
       rows = spreadsheets.values().get(
         spreadsheetId = self.bingoInfoSheetId,
-        range = 'Signups!A:A'
+        range = 'Form Responses 1!D:D'
       ).execute().get('values', [])
       for row in rows:
-        if(row[0] == 'Discord Name'):
+        if('Enter your Discord username.' in row[0]): # This is the header row
           continue
         signedUpDiscordMembers.append(row[0])
     return signedUpDiscordMembers

@@ -19,7 +19,7 @@ A POC for a Python version of the UIM Showdown Discord bot
     * Linux: `python3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
 * Set up the required Google sheets
   * The bingo info sheet should have the following tabs:
-    * Signups - The output of the signup form. The Discord tag for the user needs to be the first column.
+    * Signups - The output of the signup form. The bot reads the Discord tag from the fourth column, as it is the fourth question in the signup form.
     * Team Rosters - Contains three columns: "Discord Name", "RSN", and "Team", for the Discord tag, RSN, and full team name respectively
       * This will be empty until the draft, except for the headers
     * Team Info - Contains three columns: "Team Name", "Tag", and "Color", for the full team name, abbreviation (used for channel names), and team color (used for roles, format "#A1B2C3") respectively

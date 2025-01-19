@@ -1,6 +1,10 @@
 import argparse
 import configparser
+import logging
 import showdownbot.showdownbot as showdownbot
+
+# Set up logging
+logging.basicConfig(filename='showdown.log', encoding='utf-8', level=logging.INFO)
 
 # Parse command-line args
 parser = argparse.ArgumentParser(

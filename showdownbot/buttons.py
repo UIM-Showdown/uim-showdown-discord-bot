@@ -8,6 +8,8 @@ class ApproveButton(ui.Button):
     super().__init__(style=ButtonStyle.success, custom_id='approve', label='Approve')
 
   async def callback(self, ctx: Interaction):
+    logging.info('Request approved by ' + ctx.user.name + ':')
+    logging.info(str(self.approvalRequest))
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request approved')
     team = self.showdownBot.discordUserTeams[ctx.user.name]
@@ -27,6 +29,8 @@ class DenyButton(ui.Button):
     super().__init__(style=ButtonStyle.danger, custom_id='deny', label='Deny')
 
   async def callback(self, ctx: Interaction):
+    logging.info('Request denied by ' + ctx.user.name + ':')
+    logging.info(str(self.approvalRequest))
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
     team = self.showdownBot.discordUserTeams[ctx.user.name]

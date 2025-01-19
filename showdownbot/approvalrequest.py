@@ -1,3 +1,4 @@
+import logging
 from discord import Interaction
 import showdownbot.approvalhandlers as approvalhandlers
 
@@ -29,6 +30,8 @@ class ApprovalRequest():
         self.params[param['name']] = ctx.data['resolved']['attachments'][param['value']]['url']
       else:
         self.params[param['name']] = str(param['value'])
+    logging.info('Approval request created:')
+    logging.info(self.__str__())
 
   def __str__(self):
     requestText = 'RSN: ' + self.rsn + '\n'

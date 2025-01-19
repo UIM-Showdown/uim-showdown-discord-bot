@@ -30,9 +30,9 @@ A POC for a Python version of the UIM Showdown Discord bot
   * The Google service account's email address (ending in ".iam.gserviceaccount.com") should have editor access to the submission sheet, and at least viewer access to the bingo info sheet. I recommend giving it editor access to the bingo info sheet in case you ever want to automate the process of populating bingo info in the future.
 * Download the credential file for the Google Cloud service account and save it to the directory as "google-creds.json"
 * Create a config.ini file at the root of the project directory (format documented below)
-* At this point, you can begin calling the --updatesignuproles command on a scheduled job to automatically add the "Signup" role to all signed up Discord members, and the "Competitor" role to all Discord members on a team:
-  * Windows: `py -3 ./showdown-bot-poc.py --updatesignuproles`
-  * Linux: `python3 ./showdown-bot-poc.py --updatesignuproles`
+* At this point, you can begin calling the --updatecompetitorrole command on a scheduled job to automatically add the "Competitor" role to all signed up Discord members:
+  * Windows: `py -3 ./showdown-bot-poc.py --updatecompetitorrole`
+  * Linux: `python3 ./showdown-bot-poc.py --updatecompetitorrole`
 * Once the draft is complete, populate the "Team Rosters" and "Team Info" tabs on the bingo info sheet
 * Set up the team roles/categories/channels:
   * Windows: `py -3 ./showdown-bot-poc.py --setupserver`

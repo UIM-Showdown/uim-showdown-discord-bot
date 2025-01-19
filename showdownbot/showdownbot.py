@@ -144,16 +144,10 @@ class ShowdownBot:
     guild = self.bot.get_guild(self.guildId)
     roles = guild.roles
     channels = guild.channels
-    signupRole = None
     competitorRole = None
     for role in roles:
-      if(role.name == 'Signup'):
-        signupRole = role
       if(role.name == 'Competitor'):
         competitorRole = role
-    if(signupRole is None):
-      print('Could not find role named "Signup". Exiting...')
-      os._exit(1)
     if(competitorRole is None):
       print('Could not find role named "Competitor". Exiting...')
       os._exit(1)
@@ -172,31 +166,22 @@ class ShowdownBot:
         if(role.name == teamName):
           await role.delete()
 
-    # De-assign signup/competitor roles
+    # De-assign competitor role
     for member in guild.members:
-      if(member.get_role(signupRole.id)):
-        await member.remove_roles(signupRole)
       if(member.get_role(competitorRole.id)):
         await member.remove_roles(competitorRole)
 
   '''
-  Assigns the "Signup" and "Competitor" roles, using data from the bingo info sheet
+  Assigns the "Competitor" role, using data from the bingo info sheet
   '''
-  async def updateSignupRoles(self):
+  async def updateCompetitorRole(self):
     signedUpDiscordMembers = self.googleSheetClient.getSignedUpDiscordMembers()
-    teamRosters = self.googleSheetClient.getTeamRosters()
     guild = self.bot.get_guild(self.guildId)
     roles = guild.roles
-    signupRole = None
     competitorRole = None
     for role in roles:
-      if(role.name == 'Signup'):
-        signupRole = role
       if(role.name == 'Competitor'):
         competitorRole = role
-    if(signupRole is None):
-      print('Could not find role named "Signup". Exiting...')
-      os._exit(1)
     if(competitorRole is None):
       print('Could not find role named "Competitor". Exiting...')
       os._exit(1)
@@ -206,18 +191,8 @@ class ShowdownBot:
       if(member is None):
         print('Could not find Discord server member named "' + signedUpDiscordMember + '". Continuing...')
         continue
-      if(not member.get_role(signupRole.id)):
-        await member.add_roles(signupRole)
-
-    for teamName in teamRosters:
-      teamRoster = teamRosters[teamName]
-      for player in teamRoster:
-        member = guild.get_member_named(player['discordName'])
-        if(member is None):
-          print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
-          continue
-        if(not member.get_role(competitorRole.id)):
-          await member.add_roles(competitorRole)
+      if(not member.get_role(competitorRole.id)):
+        await member.add_roles(competitorRole)
 
   '''
   Helper method to send a message to the error channel to report an error, and responds to the original interaction (ctx) to notify the user that the error has been reported
@@ -261,10 +236,10 @@ class ShowdownBot:
       synced = await self.bot.tree.sync()
       print(f'Synced {len(synced)} commands.')
       os._exit(0)
-    if(commandLineArgs.updatesignuproles):
-      print('Updating signup roles...')
-      await self.updateSignupRoles()
-      print('Signup roles updated')
+    if(commandLineArgs.updatecompetitorrole):
+      print('Updating competitor role...')
+      await self.updateCompetitorRole()
+      print('Competitor role updated')
       os._exit(0)
     if(commandLineArgs.setupserver):
       response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')

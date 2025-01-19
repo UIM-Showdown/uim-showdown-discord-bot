@@ -91,9 +91,27 @@ class ShowdownBot:
           name = teamName,
           overwrites = {
             guild.default_role: PermissionOverwrite(view_channel = False),
-            teamRole: PermissionOverwrite(view_channel = True),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
+            teamRole: PermissionOverwrite(view_channel = True),
             captainRole: PermissionOverwrite(manage_channels = True)
+          }
+        )
+
+      # Create announcements text channel
+      announcementsTextChannel = None
+      announcementsTextChannelName = teamInfo[teamName]['tag'].lower() + '-announcements'
+      for channel in channels:
+        if(isinstance(channel, TextChannel) and channel.name == announcementsTextChannelName):
+          announcementsTextChannel = channel
+      if(announcementsTextChannel is None):
+        announcementsTextChannel = await guild.create_text_channel(
+          name = announcementsTextChannelName,
+          category = category,
+          overwrites = {
+            guild.default_role: PermissionOverwrite(view_channel = False),
+            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
+            teamRole: PermissionOverwrite(view_channel = True, send_messages = False),
+            captainRole: PermissionOverwrite(send_messages = True)
           }
         )
 
@@ -130,7 +148,13 @@ class ShowdownBot:
       if(botSubmissionsChannel is None):
         botSubmissionsChannel = await guild.create_text_channel(
           name = botSubmissionsChannelName,
-          category = category
+          category = category,
+          overwrites = {
+            guild.default_role: PermissionOverwrite(view_channel = False),
+            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
+            teamRole: PermissionOverwrite(view_channel = True),
+            captainRole: PermissionOverwrite(manage_channels = False)
+          }
         )
 
       # Assign team roles to players

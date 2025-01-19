@@ -49,19 +49,25 @@ class ShowdownBot:
   Creates team roles/categories/channels and assigns team roles to players, using data from the bingo info sheet
   '''
   async def setUpServer(self):
+    await self.updateCompetitorRole()
     teamInfo = self.googleSheetClient.getTeamInfo()
     teamRosters = self.googleSheetClient.getTeamRosters()
     guild = self.bot.get_guild(self.guildId)
     roles = guild.roles
     channels = guild.channels
     eventStaffRole = None
+    captainRole = None
     for role in roles:
       if(role.name == 'Event staff'):
         eventStaffRole = role
+      if(role.name == 'Captain'):
+        captainRole = role
     if(eventStaffRole is None):
       print('Could not find event staff role. Exiting...')
       os._exit(1)
-
+    if(captainRole is None):
+      print('Could not find captain role. Exiting...')
+      os._exit(1)
 
     for teamName in teamInfo:
       # Create team role
@@ -86,7 +92,8 @@ class ShowdownBot:
           overwrites = {
             guild.default_role: PermissionOverwrite(view_channel = False),
             teamRole: PermissionOverwrite(view_channel = True),
-            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True)
+            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
+            captainRole: PermissionOverwrite(manage_channels = True)
           }
         )
 

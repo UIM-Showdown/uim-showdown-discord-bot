@@ -262,6 +262,15 @@ class ShowdownBot:
   Checks for command line arguments indicating alternate run commands, and executes them, exiting afterwards
   '''
   async def handleAlternateRunCommands(self, commandLineArgs):
+    if(commandLineArgs.clearcommands):
+      print('Clearing commands...')
+      guild = self.bot.get_guild(self.guildId)
+      self.bot.tree.clear_commands(guild=None)
+      self.bot.tree.clear_commands(guild=guild)
+      await self.bot.tree.sync(guild=None)
+      await self.bot.tree.sync(guild=guild)
+      print('Commands cleared')
+      os._exit(0)
     if(commandLineArgs.updatecommands):
       print('Updating commands...')
       synced = await self.bot.tree.sync()

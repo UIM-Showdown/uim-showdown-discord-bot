@@ -33,6 +33,6 @@ class DenyButton(ui.Button):
     logging.info(str(self.approvalRequest))
     await ctx.message.edit(view = ui.View())
     await ctx.response.send_message('Request denied')
-    team = self.showdownBot.discordUserTeams[ctx.user.name]
+    team = self.showdownBot.discordUserTeams[self.approvalRequest.user.name]
     submissionsChannel = self.showdownBot.teamSubmissionChannels[team]
     await submissionsChannel.send(f'<@{self.approvalRequest.user.id}> Your {self.approvalRequest.shortDesc} has been denied')

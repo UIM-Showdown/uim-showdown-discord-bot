@@ -2,3 +2,4 @@ config.ini
 google-creds.json
 __pycache__
 showdown.log
+venv

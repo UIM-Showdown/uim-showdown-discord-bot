@@ -469,7 +469,7 @@ class ShowdownBot:
       await ctx.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
-    async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Theatre of Blood', 'Tombs of Amascut', 'Sepulchre Relay', 'Barbarian Assault']):
+    async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Chambers of Xeric', 'Tombs of Amascut', 'Barbarian Assault', 'Vardorvis', 'The Whisperer', 'The Leviathan', 'Duke Sucellus']):
       await self.checkForValidPlayer(ctx)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')

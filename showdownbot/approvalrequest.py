@@ -35,6 +35,7 @@ class ApprovalRequest():
 
   def __str__(self):
     requestText = 'RSN: ' + self.rsn + '\n'
+    requestText += 'Team: ' + self.team + '\n'
     requestText += 'Command: /' + self.commandName
     for paramName in self.params:
       requestText += '\n' + paramName + ': ' + self.params[paramName]

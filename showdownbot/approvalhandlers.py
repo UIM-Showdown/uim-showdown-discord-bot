@@ -20,7 +20,6 @@ class BAHandler(ApprovalHandler):
         request.user.name,
         request.team,
         request.params['blackboard_screenshot'],
-        request.params['clog_screenshot'],
         request.params['attacker_points'],
         request.params['defender_points'],
         request.params['collector_points'],
@@ -28,7 +27,15 @@ class BAHandler(ApprovalHandler):
         request.params['attacker_level'],
         request.params['defender_level'],
         request.params['collector_level'],
-        request.params['healer_level'],
+        request.params['healer_level']
+      ]
+    )
+    request.showdownBot.googleSheetClient.appendSubmission(
+      'BAColLogDump!A:K',
+      [
+        request.user.name,
+        request.team,
+        request.params['clog_screenshot'],
         request.params['high_gambles'],
         request.params['hats'],
         int(request.params['torso']) + int(request.params['skirt']),
@@ -36,6 +43,7 @@ class BAHandler(ApprovalHandler):
         request.params['boots']
       ]
     )
+
 
 class ChallengeHandler(ApprovalHandler):
   async def requestApproved(self, request):

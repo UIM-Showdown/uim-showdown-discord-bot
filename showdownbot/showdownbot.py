@@ -458,10 +458,13 @@ class ShowdownBot:
       boots: int
     ):
       await self.checkForValidPlayer(ctx)
-      argValues = [locals()[param.name] for param in submit_barbarian_assault.parameters]
-      for argValue in argValues:
+      for param in submit_barbarian_assault.parameters:
+        argName = param.name
+        argValue = locals()[argName]
         if(isinstance(argValue, int) and argValue < 0):
           raise errors.BingoUserError('BA arguments cannot be negative')
+        if('level' in argName and (argValue < 1 or argValue > 5)):
+          raise errors.BingoUserError('BA levels must be 1-5')
       request = approvalrequest.ApprovalRequest(self, ctx, 'BA points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'

@@ -1,11 +1,10 @@
 import logging
 import os
 from discord.ext import commands
-from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite
+from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
 from typing import Literal
 import showdownbot.errors as errors
 import showdownbot.approvalrequest as approvalrequest
-import showdownbot.buttons as buttons
 from showdownbot.googlesheetclient import GoogleSheetClient
 
 '''
@@ -37,6 +36,7 @@ class ShowdownBot:
     self.registerCommands()
     self.registerErrorHandler()
     self.registerReadyHook(commandLineArgs)
+    self.registerInteractionHook()
 
   '''
   Helper method to raise a BingoUserError if the user that spawned the interaction (ctx) is not on a team (and therefore should not be able to use commands)
@@ -254,8 +254,8 @@ class ShowdownBot:
     requestText = 'New approval requested:\n'
     requestText += str(request)
     view = ui.View()
-    view.add_item(buttons.ApproveButton(request, self))
-    view.add_item(buttons.DenyButton(request, self))
+    view.add_item(ui.Button(style=ButtonStyle.success, custom_id='approve', label='Approve'))
+    view.add_item(ui.Button(style=ButtonStyle.danger, custom_id='deny', label='Deny'))
     await self.bot.get_channel(self.approvalsChannelId).send(requestText, view=view)
   
   '''
@@ -496,6 +496,48 @@ class ShowdownBot:
         logging.error('Error', exc_info=error)
         request = approvalrequest.ApprovalRequest(self, ctx)
         await self.sendErrorMessageToErrorChannel(ctx, request, error)
+
+  '''
+  Registers an interaction hook callback to the bot
+  '''
+  def registerInteractionHook(self):
+    @self.bot.event
+    async def on_interaction(interaction):
+      data = interaction.data
+      if(interaction.type == InteractionType.component and data['component_type'] == 2): # This is a button click interaction
+        # Parse the ApprovalRequest out of the message contents
+        message = interaction.message.content
+        requestJson = None
+        for line in message.splitlines():
+          if(line.startswith('Request json: `')): # This is the line that has our json on it
+            requestJson = line.replace('Request json: ', '').replace('`', '')
+            break
+        if(requestJson == None):
+          return # Not an approval request message
+        if(data['custom_id'] == 'approve'): # User has clicked the "Approve" button
+          request = approvalrequest.fromJson(requestJson, self)
+          logging.info('Request approved by ' + interaction.user.name + ':')
+          logging.info(requestJson)
+          await interaction.message.edit(view = ui.View())
+          await interaction.response.send_message(f'Request approved by {interaction.user.display_name}')
+          submissionsChannel = self.teamSubmissionChannels[request.team]
+          await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been approved by {interaction.user.display_name}')
+          try:
+            await request.approve()
+          except Exception as error:
+            logging.error('Error', exc_info=error)
+            await self.sendErrorMessageToErrorChannel(interaction, request, error)
+            return
+        if(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
+          request = approvalrequest.fromJson(requestJson, self)
+          logging.info('Request denied by ' + interaction.user.name + ':')
+          logging.info(requestJson)
+          await interaction.message.edit(view = ui.View())
+          await interaction.response.send_message(f'Request denied by {interaction.user.display_name}')
+          submissionsChannel = self.teamSubmissionChannels[request.team]
+          await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been denied by {interaction.user.display_name}')
+        else: # Something unexpected
+          pass
 
   '''
   Registers a ready hook callback to the bot

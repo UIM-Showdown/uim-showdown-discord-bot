@@ -32,9 +32,9 @@ class GoogleSheetClient():
         if(row[0] == 'Discord Name' and row[1] == 'RSN' and row[2] == 'Team'): # This is the header row
           continue
         if(row[2] not in rosters):
-          rosters[row[2]] = [{'discordName': row[0], 'rsn': row[1]}]
+          rosters[row[2]] = [{'discordName': row[0].lower(), 'rsn': row[1]}]
         else:
-          rosters[row[2]].append({'discordName': row[0], 'rsn': row[1]})
+          rosters[row[2]].append({'discordName': row[0].lower(), 'rsn': row[1]})
     return rosters
   
   def getTeamInfo(self):
@@ -67,7 +67,7 @@ class GoogleSheetClient():
       for row in rows:
         if('Enter your Discord username.' in row[0]): # This is the header row
           continue
-        signedUpDiscordMembers.append(row[0])
+        signedUpDiscordMembers.append(row[0].lower())
     return signedUpDiscordMembers
   
   def getMonsters(self):

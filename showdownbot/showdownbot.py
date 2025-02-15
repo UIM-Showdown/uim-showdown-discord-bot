@@ -93,7 +93,7 @@ class ShowdownBot:
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
             teamRole: PermissionOverwrite(view_channel = True),
-            captainRole: PermissionOverwrite(manage_channels = True)
+            captainRole: PermissionOverwrite(manage_channels = True, manage_messages = True)
           }
         )
 
@@ -111,7 +111,7 @@ class ShowdownBot:
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
             teamRole: PermissionOverwrite(view_channel = True, send_messages = False),
-            captainRole: PermissionOverwrite(send_messages = True)
+            captainRole: PermissionOverwrite(send_messages = True, manage_messages = True)
           }
         )
 

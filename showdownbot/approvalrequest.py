@@ -47,19 +47,19 @@ def fromJson(jsonString, showdownBot):
 
 # Represents an approval request
 class ApprovalRequest():
-  def __init__(self, showdownBot = None, ctx: Interaction = None, shortDesc = None, user = None, rsn = None, team = None, commandName = None, params = None):
-    if(ctx): # Creating from an interaction
+  def __init__(self, showdownBot = None, interaction: Interaction = None, shortDesc = None, user = None, rsn = None, team = None, commandName = None, params = None):
+    if(interaction):
       self.showdownBot = showdownBot
-      self.user = ctx.user
+      self.user = interaction.user
       self.rsn = self.showdownBot.discordUserRSNs[self.user.name]
       self.team = self.showdownBot.discordUserTeams[self.user.name]
-      self.commandName = ctx.command.name
+      self.commandName = interaction.command.name
       self.params = {}
       self.approvalHandler = handlers[self.commandName]
       self.shortDesc = shortDesc
-      for param in ctx.data['options']:
+      for param in interaction.data['options']:
         if('screenshot' in param['name'].lower()):
-          self.params[param['name']] = ctx.data['resolved']['attachments'][param['value']]['url']
+          self.params[param['name']] = interaction.data['resolved']['attachments'][param['value']]['url']
         else:
           self.params[param['name']] = str(param['value'])
     else: # Creating from raw params, i.e. a previously serialized json string

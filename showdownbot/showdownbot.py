@@ -39,10 +39,10 @@ class ShowdownBot:
     self.registerInteractionHook()
 
   '''
-  Helper method to raise a BingoUserError if the user that spawned the interaction (ctx) is not on a team (and therefore should not be able to use commands)
+  Helper method to raise a BingoUserError if the user that spawned the interaction is not on a team (and therefore should not be able to use commands)
   '''
-  async def checkForValidPlayer(self, ctx):
-    if(ctx.user.name not in self.discordUserRSNs):
+  async def checkForValidPlayer(self, interaction):
+    if(interaction.user.name not in self.discordUserRSNs):
       raise errors.BingoUserError('User is not a registered player in this event')
   
   '''
@@ -226,9 +226,9 @@ class ShowdownBot:
         await member.add_roles(competitorRole)
 
   '''
-  Helper method to send a message to the error channel to report an error, and respond to the original interaction (ctx) to notify the user that the error has been reported
+  Helper method to send a message to the error channel to report an error, and respond to the original interaction to notify the user that the error has been reported
   '''
-  async def sendErrorMessageToErrorChannel(self, ctx, request, error):
+  async def sendErrorMessageToErrorChannel(self, interaction, request, error):
     errorText = 'Unexpected error occurred:\n'
     if(request):
       errorText += 'Processing request: \n' + str(request) + '\n'
@@ -238,8 +238,8 @@ class ShowdownBot:
       errorText += f'Error: {str(error)}'
     channel = self.bot.get_channel(self.errorsChannelId)
     await channel.send(errorText)
-    if(ctx):
-      await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
+    if(interaction):
+      await interaction.response.send_message('Unexpected error: The admins have been notified to review this error')
 
   '''
   Helper method to send a message to the approvals channel to request approval for a submission
@@ -330,7 +330,7 @@ class ShowdownBot:
 
     # Set up monster/clog autocomplete callbacks
     async def monster_autocomplete(
-      ctx: Interaction,
+      interaction: Interaction,
       current: str
     ) -> list[app_commands.Choice[str]]:
       results = [
@@ -342,7 +342,7 @@ class ShowdownBot:
       return results
 
     async def clog_autocomplete(
-      ctx: Interaction,
+      interaction: Interaction,
       current: str
     ) -> list[app_commands.Choice[str]]:
       results = [
@@ -359,87 +359,87 @@ class ShowdownBot:
     # Register commands
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
     @app_commands.autocomplete(monster=monster_autocomplete)
-    async def submit_monster_killcount(ctx: Interaction, screenshot: Attachment, monster: str, kc: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_monster_killcount(interaction: Interaction, screenshot: Attachment, monster: str, kc: int):
+      await self.checkForValidPlayer(interaction)
       if(kc < 0):
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
         raise errors.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{kc} KC of {monster}')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{kc} KC of {monster}')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
     @app_commands.autocomplete(item=clog_autocomplete)
-    async def submit_collection_log(ctx: Interaction, screenshot: Attachment, item: str):
-      await self.checkForValidPlayer(ctx)
+    async def submit_collection_log(interaction: Interaction, screenshot: Attachment, item: str):
+      await self.checkForValidPlayer(interaction)
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'Collection log item "{item}"')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'Collection log item "{item}"')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
-    async def submit_pest_control(ctx: Interaction, screenshot: Attachment, total_games: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_pest_control(interaction: Interaction, screenshot: Attachment, total_games: int):
+      await self.checkForValidPlayer(interaction)
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{total_games} games of pest control')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{total_games} games of pest control')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
-    async def submit_lms(ctx: Interaction, screenshot: Attachment, kills: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_lms(interaction: Interaction, screenshot: Attachment, kills: int):
+      await self.checkForValidPlayer(interaction)
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{kills} kills in LMS')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{kills} kills in LMS')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
-    async def submit_mta(ctx: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_mta(interaction: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
+      await self.checkForValidPlayer(interaction)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
-    async def submit_tithe_farm(ctx: Interaction, screenshot: Attachment, points: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_tithe_farm(interaction: Interaction, screenshot: Attachment, points: int):
+      await self.checkForValidPlayer(interaction)
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{points} tithe farm points')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{points} tithe farm points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
-    async def submit_farming_contracts(ctx: Interaction, screenshot: Attachment, contracts: int):
-      await self.checkForValidPlayer(ctx)
+    async def submit_farming_contracts(interaction: Interaction, screenshot: Attachment, contracts: int):
+      await self.checkForValidPlayer(interaction)
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, ctx, f'{contracts} farming contracts')
+      request = approvalrequest.ApprovalRequest(self, interaction, f'{contracts} farming contracts')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo!')
-    async def submit_barbarian_assault(ctx: Interaction, clog_screenshot: Attachment, blackboard_screenshot: Attachment,
+    async def submit_barbarian_assault(interaction: Interaction, clog_screenshot: Attachment, blackboard_screenshot: Attachment,
       high_gambles: int,
       attacker_points: int,
       defender_points: int,
@@ -455,7 +455,7 @@ class ShowdownBot:
       gloves: int,
       boots: int
     ):
-      await self.checkForValidPlayer(ctx)
+      await self.checkForValidPlayer(interaction)
       for param in submit_barbarian_assault.parameters:
         argName = param.name
         argValue = locals()[argName]
@@ -463,37 +463,37 @@ class ShowdownBot:
           raise errors.BingoUserError('BA arguments cannot be negative')
         if('level' in argName and (argValue < 1 or argValue > 5)):
           raise errors.BingoUserError('BA levels must be 1-5')
-      request = approvalrequest.ApprovalRequest(self, ctx, 'BA points')
+      request = approvalrequest.ApprovalRequest(self, interaction, 'BA points')
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
-    async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal[tuple(challenges)]): # type: ignore - Tuple technically works for a Literal but isn't "proper"
-      await self.checkForValidPlayer(ctx)
+    async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal[tuple(challenges)]): # type: ignore - Tuple technically works for a Literal but isn't "proper"
+      await self.checkForValidPlayer(interaction)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
         raise errors.BingoUserError('tenths_of_seconds cannot be greater than 9')
-      request = approvalrequest.ApprovalRequest(self, ctx, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
+      request = approvalrequest.ApprovalRequest(self, interaction, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
       await self.requestApproval(request)
       responseText = 'Request received:\n'
       responseText += str(request)
-      await ctx.response.send_message(responseText)
+      await interaction.response.send_message(responseText)
 
   '''
   Registers an error handler callback to the bot
   '''
   def registerErrorHandler(self):
     @self.bot.tree.error
-    async def handleCommandErrors(ctx, error):
+    async def handleCommandErrors(interaction, error):
       if(isinstance(error.original, errors.BingoUserError)):
-        await ctx.response.send_message(f'Error: {str(error.original)}')
+        await interaction.response.send_message(f'Error: {str(error.original)}')
       else:
         logging.error('Error', exc_info=error)
-        request = approvalrequest.ApprovalRequest(self, ctx)
-        await self.sendErrorMessageToErrorChannel(ctx, request, error)
+        request = approvalrequest.ApprovalRequest(self, interaction)
+        await self.sendErrorMessageToErrorChannel(interaction, request, error)
 
   '''
   Registers an interaction hook callback to the bot

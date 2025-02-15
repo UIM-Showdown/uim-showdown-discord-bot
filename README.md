@@ -11,9 +11,6 @@ A POC for a Python version of the UIM Showdown Discord bot
   * Install the "discord.py" package via pip:
     * Windows: `py -3 -m pip install -U discord.py`
     * Linux: `python3 -m pip install -U discord.py`
-  * Bug workaround in discord.py as of 10/23: Install the "audioop-lts" package via pip:
-    * Windows: `py -3 -m pip install -U audioop-lts`
-    * Linux: `python3 -m pip install -U audioop-lts`
   * Install the Google APIs via pip:
     * Windows: `py -3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
     * Linux: `python3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`

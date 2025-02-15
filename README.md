@@ -23,6 +23,7 @@ A POC for a Python version of the UIM Showdown Discord bot
       * This will be empty until the draft, except for the headers
     * Monsters - Contains one column with no header, each row is a different monster name
     * Collection Log Items - Contains one column with no header, each row is a different item name
+    * Challenges - Contains one column with no header, each row is a different challenge name
   * The submission sheet should have a tab for each type of submission; the rest depends on the type of submission and how the ingest bot is interpreting the data.
   * The Google service account's email address (ending in ".iam.gserviceaccount.com") should have editor access to the submission sheet, and at least viewer access to the bingo info sheet. I recommend giving it editor access to the bingo info sheet in case you ever want to automate the process of populating bingo info in the future.
 * Download the credential file for the Google Cloud service account and save it to the directory as "google-creds.json"

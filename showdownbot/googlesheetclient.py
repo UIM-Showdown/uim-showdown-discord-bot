@@ -70,28 +70,15 @@ class GoogleSheetClient():
         signedUpDiscordMembers.append(row[0].lower())
     return signedUpDiscordMembers
   
-  def getMonsters(self):
-    monsters = []
+  def getListFromBingoInfoSheet(self, tabName):
+    values = []
     creds = service_account.Credentials.from_service_account_file('google-creds.json', scopes=['https://www.googleapis.com/auth/spreadsheets'])
     with build('sheets', 'v4', credentials=creds) as service:
       spreadsheets = service.spreadsheets()
       rows = spreadsheets.values().get(
         spreadsheetId = self.bingoInfoSheetId,
-        range = 'Monsters!A:A'
+        range = tabName + '!A:A'
       ).execute().get('values', [])
       for row in rows:
-        monsters.append(row[0])
-    return monsters
-  
-  def getClogItems(self):
-    clogItems = []
-    creds = service_account.Credentials.from_service_account_file('google-creds.json', scopes=['https://www.googleapis.com/auth/spreadsheets'])
-    with build('sheets', 'v4', credentials=creds) as service:
-      spreadsheets = service.spreadsheets()
-      rows = spreadsheets.values().get(
-        spreadsheetId = self.bingoInfoSheetId,
-        range = 'Collection Log Items!A:A'
-      ).execute().get('values', [])
-      for row in rows:
-        clogItems.append(row[0])
-    return clogItems
+        values.append(row[0])
+    return values

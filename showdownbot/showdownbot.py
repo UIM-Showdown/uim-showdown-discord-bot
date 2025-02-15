@@ -33,9 +33,9 @@ class ShowdownBot:
     intents.message_content = True # Required for the commands extension to work
     self.bot = commands.Bot(command_prefix='/', intents=intents)
 
-    self.registerCommands()
     self.registerErrorHandler()
     self.registerReadyHook(commandLineArgs)
+    self.registerCommands()
     self.registerInteractionHook()
 
   '''
@@ -306,8 +306,8 @@ class ShowdownBot:
     self.discordUserTeams = {}
     self.discordUserRSNs = {}
     self.teamSubmissionChannels = {}
-    self.monsters = self.googleSheetClient.getMonsters()
-    self.clogItems = self.googleSheetClient.getClogItems()
+    self.monsters = self.googleSheetClient.getListFromBingoInfoSheet('Monsters')
+    self.clogItems = self.googleSheetClient.getListFromBingoInfoSheet('Collection Log Items')
     teamRosters = self.googleSheetClient.getTeamRosters()
     teamInfo = self.googleSheetClient.getTeamInfo()
     for teamName in teamRosters:
@@ -327,6 +327,7 @@ class ShowdownBot:
   Registers slash command callbacks to the bot
   '''
   def registerCommands(self):
+
     # Set up monster/clog autocomplete callbacks
     async def monster_autocomplete(
       ctx: Interaction,
@@ -351,6 +352,9 @@ class ShowdownBot:
       if(len(results) > 25):
         results = results[:25]
       return results
+    
+    # Set up dynamically-generated option list for challenges
+    challenges = self.googleSheetClient.getListFromBingoInfoSheet('Challenges')
 
     # Register commands
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
@@ -466,7 +470,7 @@ class ShowdownBot:
       await ctx.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
-    async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal['Chambers of Xeric', 'Tombs of Amascut', 'Barbarian Assault', 'Vardorvis', 'The Whisperer', 'The Leviathan', 'Duke Sucellus']):
+    async def submit_challenge(ctx: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal[tuple(challenges)]): # type: ignore - Tuple technically works for a Literal but isn't "proper"
       await self.checkForValidPlayer(ctx)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')

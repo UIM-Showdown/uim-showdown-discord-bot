@@ -121,7 +121,8 @@ The bot does *not* handle this automatically, you will need to do most of it man
 ```
 [BingoProperties]
 token = <API token goes here>
-approvalsChannelId = <Channel ID for the approvals channel goes here>
+submissionQueueChannelId = <Channel ID for the submission queue channel goes here>
+submissionLogChannelId = <Channel ID for the submission log channel goes here>
 errorsChannelId = <Channel ID for the errors channel goes here>
 guildId = <Discord server ID goes here>
 submissionSheetId = <Google Sheets spreadsheet ID for player submissions goes here>

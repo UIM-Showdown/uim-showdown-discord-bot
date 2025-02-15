@@ -20,7 +20,8 @@ class ShowdownBot:
     # Load config properties
     bingoProperties = configProperties['BingoProperties']
     self.token = bingoProperties['token']
-    self.approvalsChannelId = int(bingoProperties['approvalsChannelId'])
+    self.submissionQueueChannelId = int(bingoProperties['submissionQueueChannelId'])
+    self.submissionLogChannelId = int(bingoProperties['submissionLogChannelId'])
     self.errorsChannelId = int(bingoProperties['errorsChannelId'])
     self.guildId = int(bingoProperties['guildId'])
     self.submissionSheetId = bingoProperties['submissionSheetId']
@@ -250,7 +251,7 @@ class ShowdownBot:
     view = ui.View()
     view.add_item(ui.Button(style=ButtonStyle.success, custom_id='approve', label='Approve'))
     view.add_item(ui.Button(style=ButtonStyle.danger, custom_id='deny', label='Deny'))
-    await self.bot.get_channel(self.approvalsChannelId).send(requestText, view=view)
+    await self.bot.get_channel(self.submissionQueueChannelId).send(requestText, view=view)
   
   '''
   Checks for command line arguments indicating alternate run commands, and executes them, exiting afterwards
@@ -516,8 +517,9 @@ class ShowdownBot:
           request = approvalrequest.fromJson(requestJson, self)
           logging.info('Request approved by ' + interaction.user.name + ':')
           logging.info(requestJson)
-          await interaction.message.edit(view = ui.View())
-          await interaction.response.send_message(f'Request approved by {interaction.user.display_name}')
+          await interaction.message.delete()
+          submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
+          await submissionLogChannel.send(f'Request approved by {interaction.user.display_name}\n' + str(request))
           submissionsChannel = self.teamSubmissionChannels[request.team]
           await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been approved by {interaction.user.display_name}')
           try:
@@ -530,8 +532,9 @@ class ShowdownBot:
           request = approvalrequest.fromJson(requestJson, self)
           logging.info('Request denied by ' + interaction.user.name + ':')
           logging.info(requestJson)
-          await interaction.message.edit(view = ui.View())
-          await interaction.response.send_message(f'Request denied by {interaction.user.display_name}')
+          await interaction.message.delete()
+          submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
+          await submissionLogChannel.send(f'Request denied by {interaction.user.display_name}\n' + str(request))
           submissionsChannel = self.teamSubmissionChannels[request.team]
           await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been denied by {interaction.user.display_name}')
         else: # Something unexpected

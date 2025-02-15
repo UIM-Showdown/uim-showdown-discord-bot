@@ -1,11 +1,11 @@
-# UIM Showdown - Python Discord Bot
+# UIM Showdown - Discord Bot
 
 A Discord bot created for the UIM Showdown competition, implemented in Python and built around the discord.py package
 
 ## Setup
 
 * Install the bot
-  * Clone this repo: `git clone https://github.com/kuhnertdm/uim-showdown-python-bot-poc.git`
+  * Clone this repo: `git clone https://github.com/kuhnertdm/uim-showdown-discord-bot.git`
   * Install the latest version of [Python 3](https://www.python.org/downloads/)
     * Python 3.5 or later is required due to the usage of the typing module
   * Install the "discord.py" package via pip:

@@ -4,8 +4,10 @@ from discord.ext import commands
 from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
 from typing import Literal
 import showdownbot.errors as errors
-import showdownbot.approvalrequest as approvalrequest
+import showdownbot.submissions as submissions
 from showdownbot.googlesheetclient import GoogleSheetClient
+
+log = logging.getLogger('showdown')
 
 '''
 A wrapper for discord.py's "Bot" class that handles most of the logic for the bingo
@@ -64,10 +66,10 @@ class ShowdownBot:
       if(role.name == 'Captain'):
         captainRole = role
     if(eventStaffRole is None):
-      print('Could not find event staff role. Exiting...')
+      log.error('Could not find event staff role. Exiting...')
       os._exit(1)
     if(captainRole is None):
-      print('Could not find captain role. Exiting...')
+      log.error('Could not find captain role. Exiting...')
       os._exit(1)
 
     for teamName in teamInfo:
@@ -163,7 +165,7 @@ class ShowdownBot:
       for player in teamRoster:
         member = guild.get_member_named(player['discordName'])
         if(member is None):
-          print('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
+          log.error('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
           continue
         if(not member.get_role(teamRole.id)):
           await member.add_roles(teamRole)
@@ -181,7 +183,7 @@ class ShowdownBot:
       if(role.name == 'Competitor'):
         competitorRole = role
     if(competitorRole is None):
-      print('Could not find role named "Competitor". Exiting...')
+      log.error('Could not find role named "Competitor". Exiting...')
       os._exit(1)
     
     for teamName in teamInfo:
@@ -215,13 +217,13 @@ class ShowdownBot:
       if(role.name == 'Competitor'):
         competitorRole = role
     if(competitorRole is None):
-      print('Could not find role named "Competitor". Exiting...')
+      log.error('Could not find role named "Competitor". Exiting...')
       os._exit(1)
 
     for signedUpDiscordMember in signedUpDiscordMembers:
       member = guild.get_member_named(signedUpDiscordMember)
       if(member is None):
-        print('Could not find Discord server member named "' + signedUpDiscordMember + '". Continuing...')
+        log.error('Could not find Discord server member named "' + signedUpDiscordMember + '". Continuing...')
         continue
       if(not member.get_role(competitorRole.id)):
         await member.add_roles(competitorRole)
@@ -229,10 +231,10 @@ class ShowdownBot:
   '''
   Helper method to send a message to the error channel to report an error, and respond to the original interaction to notify the user that the error has been reported
   '''
-  async def sendErrorMessageToErrorChannel(self, interaction, request, error):
+  async def sendErrorMessageToErrorChannel(self, interaction, submission, error):
     errorText = 'Unexpected error occurred:\n'
-    if(request):
-      errorText += 'Processing request: \n' + str(request) + '\n'
+    if(submission):
+      errorText += 'Processing submission: \n' + str(submission) + '\n'
     if(hasattr(error, 'original')):
       errorText += f'Error: {str(error.original)}'
     else:
@@ -243,65 +245,66 @@ class ShowdownBot:
       await interaction.response.send_message('Unexpected error: The admins have been notified to review this error')
 
   '''
-  Helper method to send a message to the approvals channel to request approval for a submission
+  Helper method to send a message to the submission queue to request approval for a submission
   '''
-  async def requestApproval(self, request):
-    requestText = 'New approval requested:\n'
-    requestText += str(request)
+  async def createSubmission(self, submission):
+    log.info('Submission created:\n' + str(submission))
+    submissionText = '# New submission:\n'
+    submissionText += str(submission)
     view = ui.View()
     view.add_item(ui.Button(style=ButtonStyle.success, custom_id='approve', label='Approve'))
     view.add_item(ui.Button(style=ButtonStyle.danger, custom_id='deny', label='Deny'))
-    await self.bot.get_channel(self.submissionQueueChannelId).send(requestText, view=view)
+    await self.bot.get_channel(self.submissionQueueChannelId).send(submissionText, view=view)
   
   '''
   Checks for command line arguments indicating alternate run commands, and executes them, exiting afterwards
   '''
   async def handleAlternateRunCommands(self, commandLineArgs):
     if(commandLineArgs.clearcommands):
-      print('Clearing commands...')
+      log.info('Clearing commands...')
       guild = self.bot.get_guild(self.guildId)
       self.bot.tree.clear_commands(guild=None)
       self.bot.tree.clear_commands(guild=guild)
       await self.bot.tree.sync(guild=None)
       await self.bot.tree.sync(guild=guild)
-      print('Commands cleared')
+      log.info('Commands cleared')
       os._exit(0)
     if(commandLineArgs.updatecommands):
-      print('Updating commands...')
+      log.info('Updating commands...')
       synced = await self.bot.tree.sync()
-      print(f'Synced {len(synced)} commands.')
+      log.info(f'Synced {len(synced)} commands.')
       os._exit(0)
     if(commandLineArgs.updatecompetitorrole):
-      print('Updating competitor role...')
+      log.info('Updating competitor role...')
       await self.updateCompetitorRole()
-      print('Competitor role updated')
+      log.info('Competitor role updated')
       os._exit(0)
     if(commandLineArgs.setupserver):
       response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
       if(response.lower() == 'y'):
-        print('Starting server setup...')
+        log.info('Starting server setup...')
         await self.setUpServer()
-        print('Server setup completed')
+        log.info('Server setup completed')
         os._exit(0)
       else:
-        print('Exiting...')
+        log.info('Exiting...')
         os._exit(0)
     if(commandLineArgs.teardownserver):
       response = input('Are you sure you want to DELETE ALL THE TEAM CHANNELS AND ROLES? This is very dangerous (Y/N): ')
       if(response.lower() == 'y'):
-        print('Starting server teardown...')
+        log.info('Starting server teardown...')
         await self.tearDownServer()
-        print('Server teardown completed')
+        log.info('Server teardown completed')
         os._exit(0)
       else:
-        print('Exiting...')
+        log.info('Exiting...')
         os._exit(0)
   
   '''
   Populates instance variables coming from the bingo info sheet
   '''
   def loadBingoInfo(self):
-    print('Loading bingo info...')
+    log.info('Loading bingo info...')
     guild = self.bot.get_guild(self.guildId)
     channels = guild.channels
     self.discordUserTeams = {}
@@ -318,7 +321,7 @@ class ShowdownBot:
         if(channel.name == teamBotSubmissionChannelName):
           self.teamSubmissionChannels[teamName] = channel
       if(teamName not in self.teamSubmissionChannels):
-        print('Could not find channel named ' + teamBotSubmissionChannelName + '. The server might not have been set up correctly. Exiting...')
+        log.error('Could not find channel named ' + teamBotSubmissionChannelName + '. The server might not have been set up correctly. Exiting...')
         os._exit(1)
       for player in teamRosters[teamName]:
         self.discordUserRSNs[player['discordName']] = player['rsn']
@@ -329,6 +332,7 @@ class ShowdownBot:
   '''
   def registerCommands(self):
 
+    log.info('Registering commands...')
     # Set up monster/clog autocomplete callbacks
     async def monster_autocomplete(
       interaction: Interaction,
@@ -366,10 +370,10 @@ class ShowdownBot:
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
         raise errors.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{kc} KC of {monster}')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{kc} KC of {monster}')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
@@ -378,10 +382,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'Collection log item "{item}"')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'Collection log item "{item}"')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
@@ -389,10 +393,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{total_games} games of pest control')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{total_games} games of pest control')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
@@ -400,10 +404,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{kills} kills in LMS')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{kills} kills in LMS')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
@@ -411,10 +415,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
@@ -422,10 +426,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{points} tithe farm points')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{points} tithe farm points')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
@@ -433,10 +437,10 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
-      request = approvalrequest.ApprovalRequest(self, interaction, f'{contracts} farming contracts')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, f'{contracts} farming contracts')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the bingo!')
@@ -464,10 +468,10 @@ class ShowdownBot:
           raise errors.BingoUserError('BA arguments cannot be negative')
         if('level' in argName and (argValue < 1 or argValue > 5)):
           raise errors.BingoUserError('BA levels must be 1-5')
-      request = approvalrequest.ApprovalRequest(self, interaction, 'BA points')
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, 'BA points')
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
@@ -477,66 +481,66 @@ class ShowdownBot:
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
         raise errors.BingoUserError('tenths_of_seconds cannot be greater than 9')
-      request = approvalrequest.ApprovalRequest(self, interaction, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
-      await self.requestApproval(request)
-      responseText = 'Request received:\n'
-      responseText += str(request)
+      submission = submissions.Submission(self, interaction, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
       await interaction.response.send_message(responseText)
 
   '''
   Registers an error handler callback to the bot
   '''
   def registerErrorHandler(self):
+    log.info('Registering error handler...')
     @self.bot.tree.error
     async def handleCommandErrors(interaction, error):
       if(isinstance(error.original, errors.BingoUserError)):
         await interaction.response.send_message(f'Error: {str(error.original)}')
       else:
-        logging.error('Error', exc_info=error)
-        request = approvalrequest.ApprovalRequest(self, interaction)
-        await self.sendErrorMessageToErrorChannel(interaction, request, error)
+        log.error('Error', exc_info=error)
+        submission = submissions.Submission(self, interaction)
+        await self.sendErrorMessageToErrorChannel(interaction, submission, error)
 
   '''
   Registers an interaction hook callback to the bot
   '''
   def registerInteractionHook(self):
+    log.info('Registering interaction hook...')
     @self.bot.event
     async def on_interaction(interaction):
       data = interaction.data
       if(interaction.type == InteractionType.component and data['component_type'] == 2): # This is a button click interaction
-        # Parse the ApprovalRequest out of the message contents
+        # Parse the Submission out of the message contents
         message = interaction.message.content
-        requestJson = None
+        submissionJson = None
         for line in message.splitlines():
-          if(line.startswith('Request json: `')): # This is the line that has our json on it
-            requestJson = line.replace('Request json: ', '').replace('`', '')
+          if(line.startswith('Submission json: `')): # This is the line that has our json on it
+            submissionJson = line.replace('Submission json: ', '').replace('`', '')
             break
-        if(requestJson == None):
-          return # Not an approval request message
+        if(submissionJson == None):
+          return # Not a submission message
         if(data['custom_id'] == 'approve'): # User has clicked the "Approve" button
-          request = approvalrequest.fromJson(requestJson, self)
-          logging.info('Request approved by ' + interaction.user.name + ':')
-          logging.info(requestJson)
+          submission = submissions.fromJson(submissionJson, self)
+          log.info('Submission approved by ' + interaction.user.name + ':\n' + submissionJson)
           await interaction.message.delete()
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
-          await submissionLogChannel.send(f'Request approved by {interaction.user.display_name}\n' + str(request))
-          submissionsChannel = self.teamSubmissionChannels[request.team]
-          await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been approved by {interaction.user.display_name}')
+          await submissionLogChannel.send(f'# Submission approved by {interaction.user.display_name}:\n' + str(submission))
+          submissionsChannel = self.teamSubmissionChannels[submission.team]
+          await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been approved by {interaction.user.display_name}')
           try:
-            await request.approve()
+            await submission.approve()
           except Exception as error:
-            logging.error('Error', exc_info=error)
-            await self.sendErrorMessageToErrorChannel(interaction, request, error)
+            log.error('Error', exc_info=error)
+            await self.sendErrorMessageToErrorChannel(interaction, submission, error)
             return
         if(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
-          request = approvalrequest.fromJson(requestJson, self)
-          logging.info('Request denied by ' + interaction.user.name + ':')
-          logging.info(requestJson)
+          submission = submissions.fromJson(submissionJson, self)
+          log.info('Submission denied by ' + interaction.user.name + ':\n' + submissionJson)
           await interaction.message.delete()
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
-          await submissionLogChannel.send(f'Request denied by {interaction.user.display_name}\n' + str(request))
-          submissionsChannel = self.teamSubmissionChannels[request.team]
-          await submissionsChannel.send(f'<@{request.user.id}> Your {request.shortDesc} has been denied by {interaction.user.display_name}')
+          await submissionLogChannel.send(f'# Submission denied by {interaction.user.display_name}:\n' + str(submission))
+          submissionsChannel = self.teamSubmissionChannels[submission.team]
+          await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been denied by {interaction.user.display_name}')
         else: # Something unexpected
           pass
 
@@ -544,14 +548,15 @@ class ShowdownBot:
   Registers a ready hook callback to the bot
   '''
   def registerReadyHook(self, commandLineArgs):
+    log.info('Registering ready hook...')
     @self.bot.event
     async def on_ready():
-      print(f'Logged in as {self.bot.user.name}')
+      log.info(f'Logged in as {self.bot.user.name}')
 
       await self.handleAlternateRunCommands(commandLineArgs)
       self.loadBingoInfo()
 
-      print('Ready to accept commands!')
+      log.info('Startup complete, ready to accept commands!')
   
   '''
   Connects the bot to the server to begin accepting commands

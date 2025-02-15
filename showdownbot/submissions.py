@@ -16,26 +16,26 @@ handlers['submit_barbarian_assault'] = approvalhandlers.BAHandler()
 handlers['submit_challenge'] = approvalhandlers.ChallengeHandler()
 
 '''
-Serializes an ApprovalRequest to a json string
+Serializes a Submission to a json string
 '''
-def toJson(request):
+def toJson(submission):
   jsonObject = {}
-  jsonObject['user'] = request.user.name
-  jsonObject['rsn'] = request.rsn
-  jsonObject['team'] = request.team
-  jsonObject['commandName'] = request.commandName
-  jsonObject['params'] = request.params
-  jsonObject['shortDesc'] = request.shortDesc
+  jsonObject['user'] = submission.user.name
+  jsonObject['rsn'] = submission.rsn
+  jsonObject['team'] = submission.team
+  jsonObject['commandName'] = submission.commandName
+  jsonObject['params'] = submission.params
+  jsonObject['shortDesc'] = submission.shortDesc
   return json.dumps(jsonObject)
 
 '''
-Deserializes an ApprovalRequest from a json string
+Deserializes a Submission from a json string
 '''
 def fromJson(jsonString, showdownBot):
   jsonObject = json.loads(jsonString)
   guild = showdownBot.bot.get_guild(showdownBot.guildId)
   user = guild.get_member_named(jsonObject['user'])
-  return ApprovalRequest(
+  return Submission(
     showdownBot = showdownBot,
     user = user,
     shortDesc = jsonObject['shortDesc'],
@@ -45,8 +45,8 @@ def fromJson(jsonString, showdownBot):
     params = jsonObject['params']
   )
 
-# Represents an approval request
-class ApprovalRequest():
+# Represents a submission made via the bot
+class Submission():
   def __init__(self, showdownBot = None, interaction: Interaction = None, shortDesc = None, user = None, rsn = None, team = None, commandName = None, params = None):
     if(interaction):
       self.showdownBot = showdownBot
@@ -71,17 +71,15 @@ class ApprovalRequest():
       self.params = params
       self.approvalHandler = handlers[self.commandName]
       self.shortDesc = shortDesc
-    logging.info('Approval request created:')
-    logging.info(self.__str__())
 
   def __str__(self):
-    requestText = 'RSN: ' + self.rsn + '\n'
-    requestText += 'Team: ' + self.team + '\n'
-    requestText += 'Command: /' + self.commandName
+    submissionText = 'RSN: ' + self.rsn + '\n'
+    submissionText += 'Team: ' + self.team + '\n'
+    submissionText += 'Command: /' + self.commandName
     for paramName in self.params:
-      requestText += '\n' + paramName + ': ' + self.params[paramName]
-    requestText += '\n' + 'Request json: `' + toJson(self) + '`'
-    return requestText
+      submissionText += '\n' + paramName + ': ' + self.params[paramName]
+    submissionText += '\n' + 'Submission json: `' + toJson(self) + '`'
+    return submissionText
 
   async def approve(self):
-    await self.approvalHandler.requestApproved(self)
+    await self.approvalHandler.submissionApproved(self)

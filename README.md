@@ -72,8 +72,8 @@ The following are the major components of this repo:
 
 * **showdown-bot-poc.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
 * **showdownbot/showdownbot.py:** Defines the ShowdownBot class, which is a wrapper for the discord.py library's "Bot" class, contains most event logic, and defines command handler methods that act as the entry points for actions triggered by slash commands.
-* **approvalrequest.py:** Defines the ApprovalRequest class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
-* **approvalhandlers.py:** Defines a number of classes that inherit from the ApprovalHandler ABC. These classes define a "requestApproved" method that acts as a callback for when a request is approved, and generally involve writing new rows to the submission sheet.
+* **submissions.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
+* **approvalhandlers.py:** Defines a number of classes that inherit from the ApprovalHandler ABC. These classes define a "submissionApproved" method that acts as a callback for when a submission is approved, and generally involve writing new rows to the submission sheet.
 * **googlesheetclient.py:** Defines the GoogleSheetClient class for interfacing with the bingo info/submission sheets.
 * **errors.py:** Defines the BingoUserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)
 
@@ -99,9 +99,9 @@ The following are the major components of the ShowdownBot class:
 
 To add a new command to the bot, do the following:
 
-* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.requestApproval(), and then send a message back to confirm the action.
-* Create an approval handler class in approvalhandlers.py. This class's requestApproved() method must handle any non-Discord-facing actions that must be taken when the request is approved.
-* Assign the approval handler to the command at the top of approvalrequest.py.
+* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.createSubmission(), and then send a message back to confirm the action.
+* Create an approval handler class in approvalhandlers.py. This class's submissionApproved() method must handle any non-Discord-facing actions that must be taken when the submission is approved.
+* Assign the approval handler to the command at the top of submissions.py.
 * To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdown-bot-poc.py --updatecommands`
   * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
   * This is not necessary for changes to the code within a command; it is only needed when adding a new command, or changing the syntax of a command (i.e. what parameters it takes)

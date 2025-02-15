@@ -16,7 +16,7 @@ A POC for a Python version of the UIM Showdown Discord bot
     * Linux: `python3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
 * Set up the required Google sheets
   * The bingo info sheet should have the following tabs:
-    * Signups - The output of the signup form. The bot reads the Discord tag from the fourth column, as it is the fourth question in the signup form.
+    * Form Responses 1 - The output of the signup form. The bot reads the Discord tag from the fourth column, as it is the fourth question in the signup form.
     * Team Rosters - Contains three columns: "Discord Name", "RSN", and "Team", for the Discord tag, RSN, and full team name respectively
       * This will be empty until the draft, except for the headers
     * Team Info - Contains three columns: "Team Name", "Tag", and "Color", for the full team name, abbreviation (used for channel names), and team color (used for roles, format "#A1B2C3") respectively
@@ -65,62 +65,42 @@ The following are the required permissions for the bot:
 * Send Messages
 * Manage Messages
 
-## Code flows
+## Components
 
-### Starting the bot:
+The following are the major components of this repo:
 
-* Admin runs showdown-bot-poc.py
-* showdown-bot-poc.py parses command-line args and loads the config.ini file
-* showdown-bot-poc.py creates a ShowdownBot object
-* The ShowdownBot constructor handles all initialization for the bot, including loading commands and initializing config info from the provided command-line args and config properties
-* showdown-bot-poc.py calls start() on the ShowdownBot object to connect it to Discord
-* Discord.py library calls the on_ready() method, which checks for alternate run commands (e.g. --setupserver etc)
-* If an alternate run command is present, the on_ready() method calls the appropriate method for that command, and then exits
-* Otherwise (meaning the bot is being ran normally), the on_ready() method loads the bingo info from the bingo info sheet and prints a message to indicate that it is connected
+* **showdown-bot-poc.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
+* **showdownbot/showdownbot.py:** Defines the ShowdownBot class, which is a wrapper for the discord.py library's "Bot" class, contains most event logic, and defines command handler methods that act as the entry points for actions triggered by slash commands.
+* **approvalrequest.py:** Defines the ApprovalRequest class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
+* **approvalhandlers.py:** Defines a number of classes that inherit from the ApprovalHandler ABC. These classes define a "requestApproved" method that acts as a callback for when a request is approved, and generally involve writing new rows to the submission sheet.
+* **googlesheetclient.py:** Defines the GoogleSheetClient class for interfacing with the bingo info/submission sheets.
+* **errors.py:** Defines the BingoUserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)
 
-### Submitting a request:
+## The ShowdownBot Class
 
-* User calls an application command (slash command)
-* Discord.py library runs the code in the method annotated with @self.bot.tree.command in showdownbot.py
-* Command method handles input validation (e.g. KCs must not be negative, pick-list values must be in the pick-list, etc), and if this validation fails, it raises a BingoUserError
-* Command method creates an ApprovalRequest object from the context (which is an Interaction object) and passes it to requestApproval(), then sends back a confirmation message
-* requestApproval() sends a message to the approvals channel with the request details, and constructs custom button subclasses to include with it, which include callback methods and the request info
+The following are the major components of the ShowdownBot class:
 
-### Approving a request:
-
-* Staff member clicks the approve button on the message in the approvals channel
-* The callback method in the ApproveButton class is called
-* The callback method calls the approve() method on the ApprovalRequest object (which was stored on the button)
-* ApprovalRequest.approve() calls requestApproved() on its approval handler
-* The approval handler's requestApproved() method handles things like talking to the spreadsheet
-* Back in the button's callback method, it removes the buttons, sends a sucess message to the approvals channel, and then sends the "approved" message back to the player's submission channel
-
-### Denying a request:
-
-* Staff member clicks the deny button on the message in the approvals channel
-* The callback method in the DenyButton class is called
-* The callback method remove the buttons, sends a sucess message to the approvals channel, and then sends the "denied" message back to the submissions channel
-
-### User error handling:
-
-* Command method raises a BingoUserError due to failed input validation
-* Discord.py library runs the code in the method annotated with @self.bot.tree.error in showdownbot.py
-* Command error handler callback method calls handleCommandError()
-* handleCommandError() sees that the error is a BingoUserError and simply sends a message back with the error text
-
-### Unexpected error handling:
-
-* Command method raises an error other than BingoUserError due to an unexpected error
-* Discord.py library runs the code in the method annotated with @bot.tree.error in showdownbot.py
-* Command error handler callback method calls handleCommandError()
-* handleCommandError() sees that the error is not a BingoUserError and sends a message to the errors channel listing the request/error details
+* **__init__():** The constructor for the class. Does the following:
+  * Sets up instance variables based on the config properties passed in
+  * Creates the Bot object (from the discord.py library) used as a client to communicate with Discord
+  * Calls helper methods (detailed below) to do the following:
+    * Register command callbacks
+    * Register the error handler callback
+    * Register the interaction hook
+    * Register the ready hook
+* **registerCommands():** Defines command callbacks and registers them with the bot. Each callback method is decorated with an @self.bot.tree.command decorator, which automatically adds the command to the bot's command tree.
+* **registerErrorHandler():** Defines and registers the error handler callback, which replies to the interaction with the exception message if it is a BingoUserError, and otherwise reports an internal error to the error channel.
+* **registerInteractionHook():** Defines and registers the interaction hook for the bot, which is called upon all user interactions in the server. If the interaction is a button click on a button with ID "approve" or "deny", handles the action for approving or denying a submission.
+* **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the bingo info sheet and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. setting up or tearing down the server).
+* **start():** Calls run() on the underlying Bot object (from the discord.py library)
 
 ## Adding a command
 
-* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.requestApproval(), and then send a message back with request info.
-* Create an approval handler class in approvalhandlers.py. This class's requestApproved() method handles any non-Discord-facing actions that must be taken when the request is approved.
+To add a new command to the bot, do the following:
+
+* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.requestApproval(), and then send a message back to confirm the action.
+* Create an approval handler class in approvalhandlers.py. This class's requestApproved() method must handle any non-Discord-facing actions that must be taken when the request is approved.
 * Assign the approval handler to the command at the top of approvalrequest.py.
-* Everything outside of input validation and approval handling is already handled by the bot's core code.
 * To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdown-bot-poc.py --updatecommands`
   * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
   * This is not necessary for changes to the code within a command; it is only needed when adding a new command, or changing the syntax of a command (i.e. what parameters it takes)
@@ -131,7 +111,7 @@ The bot does *not* handle this automatically, you will need to do most of it man
 
 * Modify the Discord roles for the relevant players as needed
 * Modify the "Team Rosters" tab of the bingo info sheet as needed
-* If the bot is currently running, restart it so it can pull the new version of the sheet
+* If the bot is currently running, restart it so it can pull the new version of the bingo info sheet at startup
 
 ## config.ini format
 

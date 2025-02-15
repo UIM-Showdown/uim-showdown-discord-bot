@@ -226,7 +226,7 @@ class ShowdownBot:
         await member.add_roles(competitorRole)
 
   '''
-  Helper method to send a message to the error channel to report an error, and responds to the original interaction (ctx) to notify the user that the error has been reported
+  Helper method to send a message to the error channel to report an error, and respond to the original interaction (ctx) to notify the user that the error has been reported
   '''
   async def sendErrorMessageToErrorChannel(self, ctx, request, error):
     errorText = 'Unexpected error occurred:\n'
@@ -240,12 +240,6 @@ class ShowdownBot:
     await channel.send(errorText)
     if(ctx):
       await ctx.response.send_message('Unexpected error: The admins have been notified to review this error')
-
-  '''
-  Helper method to return a list of attachments included in an interaction (ctx)
-  '''
-  def getAttachmentsFromContext(self, ctx):
-    return list(ctx.data['resolved']['attachments'].values())
 
   '''
   Helper method to send a message to the approvals channel to request approval for a submission

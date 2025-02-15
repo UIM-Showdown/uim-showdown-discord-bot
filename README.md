@@ -1,6 +1,6 @@
-# UIM Showdown - Python Discord Bot POC
+# UIM Showdown - Python Discord Bot
 
-A POC for a Python version of the UIM Showdown Discord bot
+A Discord bot created for the UIM Showdown competition, implemented in Python and built around the discord.py package
 
 ## Setup
 
@@ -29,22 +29,22 @@ A POC for a Python version of the UIM Showdown Discord bot
 * Download the credential file for the Google Cloud service account and save it to the directory as "google-creds.json"
 * Create a config.ini file at the root of the project directory (format documented below)
 * At this point, you can begin calling the --updatecompetitorrole command on a scheduled job to automatically add the "Competitor" role to all signed up Discord members:
-  * Windows: `py -3 ./showdown-bot-poc.py --updatecompetitorrole`
-  * Linux: `python3 ./showdown-bot-poc.py --updatecompetitorrole`
+  * Windows: `py -3 ./showdownrunner.py --updatecompetitorrole`
+  * Linux: `python3 ./showdownrunner.py --updatecompetitorrole`
 * Once the draft is complete, populate the "Team Rosters" and "Team Info" tabs on the bingo info sheet
 * Set up the team roles/categories/channels:
-  * Windows: `py -3 ./showdown-bot-poc.py --setupserver`
-  * Linux: `python3 ./showdown-bot-poc.py --setupserver`
+  * Windows: `py -3 ./showdownrunner.py --setupserver`
+  * Linux: `python3 ./showdownrunner.py --setupserver`
 * Update the command list in the server:
-  * Windows: `py -3 ./showdown-bot-poc.py --updatecommands`
-  * Linux: `python3 ./showdown-bot-poc.py --updatecommands`
+  * Windows: `py -3 ./showdownrunner.py --updatecommands`
+  * Linux: `python3 ./showdownrunner.py --updatecommands`
 * Run the bot:
-  * Windows: `py -3 ./showdown-bot-poc.py`
-  * Linux: `python3 ./showdown-bot-poc.py`
+  * Windows: `py -3 ./showdownrunner.py`
+  * Linux: `python3 ./showdownrunner.py`
   * This command will continue running until the process is killed
 * After the event is over, you can also automatically delete the team roles/categories/channels:
-  * Windows: `py -3 ./showdown-bot-poc.py --teardownserver`
-  * Linux: `python3 ./showdown-bot-poc.py --teardownserver`
+  * Windows: `py -3 ./showdownrunner.py --teardownserver`
+  * Linux: `python3 ./showdownrunner.py --teardownserver`
 
 ## Discord Permissions
 
@@ -70,7 +70,7 @@ The following are the required permissions for the bot:
 
 The following are the major components of this repo:
 
-* **showdown-bot-poc.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
+* **showdownrunner.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
 * **showdownbot/showdownbot.py:** Defines the ShowdownBot class, which is a wrapper for the discord.py library's "Bot" class, contains most event logic, and defines command handler methods that act as the entry points for actions triggered by slash commands.
 * **submissions.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
 * **approvalhandlers.py:** Defines a number of classes that inherit from the ApprovalHandler ABC. These classes define a "submissionApproved" method that acts as a callback for when a submission is approved, and generally involve writing new rows to the submission sheet.
@@ -102,7 +102,7 @@ To add a new command to the bot, do the following:
 * Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call self.createSubmission(), and then send a message back to confirm the action.
 * Create an approval handler class in approvalhandlers.py. This class's submissionApproved() method must handle any non-Discord-facing actions that must be taken when the submission is approved.
 * Assign the approval handler to the command at the top of submissions.py.
-* To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdown-bot-poc.py --updatecommands`
+* To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdownrunner.py --updatecommands`
   * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
   * This is not necessary for changes to the code within a command; it is only needed when adding a new command, or changing the syntax of a command (i.e. what parameters it takes)
 

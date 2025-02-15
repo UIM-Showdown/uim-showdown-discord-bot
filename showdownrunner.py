@@ -14,8 +14,8 @@ log.info('Starting Showdown Bot')
 
 # Parse command-line args
 parser = argparse.ArgumentParser(
-  prog = 'Showdown Bot POC',
-  description = 'POC for the UIM Showdown bot'
+  prog = 'UIM Showdown - Python Discord Bot',
+  description = 'A Discord bot created for the UIM Showdown competition, implemented in Python and built around the discord.py package'
 )
 parser.add_argument('--clearcommands', action='store_true', help='Clears command list on the Discord server - DO NOT SPAM THIS OR YOU WILL BE RATE LIMITED')
 parser.add_argument('--updatecommands', action='store_true', help='Updates command list on the Discord server - DO NOT SPAM THIS OR YOU WILL BE RATE LIMITED')

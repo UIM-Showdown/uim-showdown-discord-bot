@@ -5,8 +5,9 @@ import showdownbot.showdownbot as showdownbot
 
 # Set up logging
 logging.basicConfig(filename='showdown.log', encoding='utf-8', level=logging.ERROR, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-logging.getLogger('discord.client').setLevel(logging.ERROR)
-logging.getLogger('discord.gateway').setLevel(logging.ERROR)
+logging.getLogger('discord.client').setLevel(logging.WARN)
+logging.getLogger('discord.gateway').setLevel(logging.WARN)
+logging.getLogger('discord.http').setLevel(logging.WARN)
 log = logging.getLogger('showdown')
 log.addHandler(logging.StreamHandler())
 log.setLevel(logging.INFO)

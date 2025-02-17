@@ -46,7 +46,20 @@ class ShowdownBot:
   '''
   async def checkForValidPlayer(self, interaction):
     if(interaction.user.name not in self.discordUserRSNs):
-      raise errors.BingoUserError('User is not a registered player in this event')
+      raise errors.BingoUserError(f'{interaction.user.display_name} is not a registered player in this event')
+    
+  '''
+  Helper method to raise a BingoUserError if the user that spawned the interaction does not have the Screenshot Approver role (and therefore should not be able to approve/deny submissions)
+  '''
+  async def checkForScreenshotApprover(self, interaction):
+    roles = interaction.user.roles
+    hasApproverRole = False
+    for role in roles:
+      if(role.name == 'Screenshot Approver'):
+        hasApproverRole = True
+        break
+    if(not hasApproverRole):
+      raise errors.BingoUserError('User is not a screenshot approver')
   
   '''
   Creates team roles/categories/channels and assigns team roles to players, using data from the bingo info sheet
@@ -520,27 +533,71 @@ class ShowdownBot:
         if(submissionJson == None):
           return # Not a submission message
         if(data['custom_id'] == 'approve'): # User has clicked the "Approve" button
+
+          # Make sure the user is a screenshot approver
+          try:
+            await self.checkForScreenshotApprover(interaction)
+          except errors.BingoUserError as error:
+            log.error('Error', exc_info=error)
+            await interaction.response.send_message(f'Error: {interaction.user.display_name} tried to approve this submission but is not a screenshot approver')
+            return
+          
+          # Log the approval
           submission = submissions.fromJson(submissionJson, self)
           log.info('Submission approved by ' + interaction.user.name + ':\n' + submissionJson)
+
+          # Delete the submission message and any replies (which could exist because of error messages)
+          submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)
+          async for message in submissionQueueChannel.history(limit=None):
+            if(message.reference and message.reference.message_id == interaction.message.id): # The message we're looking at is a reply to the submission message
+              await message.delete()
           await interaction.message.delete()
+
+          # Send a message to the submission log
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
           await submissionLogChannel.send(f'# Submission approved by {interaction.user.display_name}:\n' + str(submission))
+
+          # Send a message to the player's team submission channel
           submissionsChannel = self.teamSubmissionChannels[submission.team]
           await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been approved by {interaction.user.display_name}')
+
+          # Process the approval
           try:
             await submission.approve()
           except Exception as error:
             log.error('Error', exc_info=error)
             await self.sendErrorMessageToErrorChannel(interaction, submission, error)
             return
+          
         if(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
+
+          # Make sure the user is a screenshot approver
+          try:
+            await self.checkForScreenshotApprover(interaction)
+          except errors.BingoUserError as error:
+            log.error('Error', exc_info=error)
+            await interaction.response.send_message(f'Error: {interaction.user.display_name} tried to deny this submission but is not a screenshot approver')
+            return
+          
+          # Log the denial
           submission = submissions.fromJson(submissionJson, self)
           log.info('Submission denied by ' + interaction.user.name + ':\n' + submissionJson)
+
+          # Delete the submission message and any replies (which could exist because of error messages)
+          submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)
+          async for message in submissionQueueChannel.history(limit=None):
+            if(message.reference and message.reference.message_id == interaction.message.id): # The message we're looking at is a reply to the submission message
+              await message.delete()
           await interaction.message.delete()
+
+          # Send a message to the submission log
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
           await submissionLogChannel.send(f'# Submission denied by {interaction.user.display_name}:\n' + str(submission))
+
+          # Send a message to the player's team submission channel
           submissionsChannel = self.teamSubmissionChannels[submission.team]
           await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been denied by {interaction.user.display_name}')
+
         else: # Something unexpected
           pass
 

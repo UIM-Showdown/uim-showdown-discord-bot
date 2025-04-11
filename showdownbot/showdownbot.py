@@ -114,8 +114,8 @@ class ShowdownBot:
           overwrites = {
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
-            teamRole: PermissionOverwrite(view_channel = True),
-            cheerleaderRole: PermissionOverwrite(view_channel = True),
+            teamRole: PermissionOverwrite(view_channel = True, attach_files = True),
+            cheerleaderRole: PermissionOverwrite(view_channel = True, attach_files = True),
             captainRole: PermissionOverwrite(manage_channels = True, manage_messages = True)
           }
         )

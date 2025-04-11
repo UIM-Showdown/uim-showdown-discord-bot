@@ -73,16 +73,22 @@ class ShowdownBot:
     channels = guild.channels
     eventStaffRole = None
     captainRole = None
+    cheerleaderRole = None
     for role in roles:
       if(role.name == 'Event staff'):
         eventStaffRole = role
       if(role.name == 'Captain'):
         captainRole = role
+      if(role.name == 'Cheerleader'):
+        cheerleaderRole = role
     if(eventStaffRole is None):
       log.error('Could not find event staff role. Exiting...')
       os._exit(1)
     if(captainRole is None):
       log.error('Could not find captain role. Exiting...')
+      os._exit(1)
+    if(cheerleaderRole is None):
+      log.error('Could not find cheerleader role. Exiting...')
       os._exit(1)
 
     for teamName in teamInfo:
@@ -109,6 +115,7 @@ class ShowdownBot:
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
             teamRole: PermissionOverwrite(view_channel = True),
+            cheerleaderRole: PermissionOverwrite(view_channel = True),
             captainRole: PermissionOverwrite(manage_channels = True, manage_messages = True)
           }
         )
@@ -127,6 +134,7 @@ class ShowdownBot:
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
             teamRole: PermissionOverwrite(view_channel = True, send_messages = False),
+            cheerleaderRole: PermissionOverwrite(view_channel = True, send_messages = False),
             captainRole: PermissionOverwrite(send_messages = True, manage_messages = True)
           }
         )
@@ -169,6 +177,7 @@ class ShowdownBot:
             guild.default_role: PermissionOverwrite(view_channel = False),
             eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
             teamRole: PermissionOverwrite(view_channel = True),
+            cheerleaderRole: PermissionOverwrite(view_channel = True),
             captainRole: PermissionOverwrite(manage_channels = False)
           }
         )

@@ -201,11 +201,17 @@ class ShowdownBot:
     roles = guild.roles
     channels = guild.channels
     competitorRole = None
+    captainRole = None
     for role in roles:
       if(role.name == 'Competitor'):
         competitorRole = role
+      if(role.name == 'Captain'):
+        captainRole = role
     if(competitorRole is None):
       log.error('Could not find role named "Competitor". Exiting...')
+      os._exit(1)
+    if(captainRole is None):
+      log.error('Could not find role named "Captain". Exiting...')
       os._exit(1)
     
     for teamName in teamInfo:
@@ -226,6 +232,11 @@ class ShowdownBot:
     for member in guild.members:
       if(member.get_role(competitorRole.id)):
         await member.remove_roles(competitorRole)
+
+    # De-assign captain role
+    for member in guild.members:
+      if(member.get_role(captainRole.id)):
+        await member.remove_roles(captainRole)
 
   '''
   Assigns the "Competitor" role, using data from the bingo info sheet

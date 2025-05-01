@@ -1,11 +1,13 @@
 import logging
 import os
+import re
+from datetime import datetime
 from discord.ext import commands
 from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
-from typing import Literal
 import showdownbot.errors as errors
 import showdownbot.submissions as submissions
 from showdownbot.googlesheetclient import GoogleSheetClient
+from showdownbot.backendclient import BackendClient
 
 log = logging.getLogger('showdown')
 
@@ -26,9 +28,10 @@ class ShowdownBot:
     self.submissionLogChannelId = int(bingoProperties['submissionLogChannelId'])
     self.errorsChannelId = int(bingoProperties['errorsChannelId'])
     self.guildId = int(bingoProperties['guildId'])
-    self.submissionSheetId = bingoProperties['submissionSheetId']
     self.bingoInfoSheetId = bingoProperties['bingoInfoSheetId']
-    self.googleSheetClient = GoogleSheetClient(self.submissionSheetId, self.bingoInfoSheetId)
+    self.backendUrl = bingoProperties['backendUrl']
+    self.googleSheetClient = GoogleSheetClient(self.bingoInfoSheetId)
+    self.backendClient = BackendClient(self.backendUrl)
 
     # Set up bot object
     intents = Intents.default()
@@ -66,8 +69,8 @@ class ShowdownBot:
   '''
   async def setUpServer(self):
     await self.updateCompetitorRole()
-    teamInfo = self.googleSheetClient.getTeamInfo()
-    teamRosters = self.googleSheetClient.getTeamRosters()
+    teamInfo = self.backendClient.getTeamInfo()
+    teamRosters = self.backendClient.getTeamRosters()
     guild = self.bot.get_guild(self.guildId)
     roles = guild.roles
     channels = guild.channels
@@ -100,7 +103,7 @@ class ShowdownBot:
       if(teamRole is None):
         teamRole = await guild.create_role(
           name = teamName,
-          color = Colour.from_str(teamInfo[teamName]['color'])
+          color = Colour.from_str('#' + teamInfo[teamName]['color'])
         )
 
       # Create team category
@@ -196,7 +199,7 @@ class ShowdownBot:
   Deletes team roles/categories/channels, using data from the bingo info sheet
   '''
   async def tearDownServer(self):
-    teamInfo = self.googleSheetClient.getTeamInfo()
+    teamInfo = self.backendClient.getTeamInfo()
     guild = self.bot.get_guild(self.guildId)
     roles = guild.roles
     channels = guild.channels
@@ -343,10 +346,24 @@ class ShowdownBot:
     self.discordUserTeams = {}
     self.discordUserRSNs = {}
     self.teamSubmissionChannels = {}
-    self.monsters = self.googleSheetClient.getListFromBingoInfoSheet('Monsters')
-    self.clogItems = self.googleSheetClient.getListFromBingoInfoSheet('Collection Log Items')
-    teamRosters = self.googleSheetClient.getTeamRosters()
-    teamInfo = self.googleSheetClient.getTeamInfo()
+    try:
+      self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
+      self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
+      self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
+      self.clogItems = self.backendClient.getCollectionLogItems()
+      self.records = self.backendClient.getRecords()
+      self.challenges = self.backendClient.getChallenges()
+
+      self.monsters.sort()
+      self.itemDrops.sort()
+      self.unrankedStartingValues.sort()
+      self.clogItems.sort()
+
+      teamRosters = self.backendClient.getTeamRosters()
+      teamInfo = self.backendClient.getTeamInfo()
+    except Exception as e:
+      log.error('Failed to get startup data from backend. Exiting...', e)
+      os._exit(1)
     for teamName in teamRosters:
       teamTag = teamInfo[teamName]['tag']
       teamBotSubmissionChannelName = teamTag.lower() + '-bot-submissions'
@@ -366,7 +383,7 @@ class ShowdownBot:
   def registerCommands(self):
 
     log.info('Registering commands...')
-    # Set up monster/clog autocomplete callbacks
+    # Set up autocomplete callbacks
     async def monster_autocomplete(
       interaction: Interaction,
       current: str
@@ -374,6 +391,30 @@ class ShowdownBot:
       results = [
         app_commands.Choice(name = monster, value = monster)
         for monster in self.monsters if current.lower() in monster.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def item_drop_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = drop, value = drop)
+        for drop in self.itemDrops if current.lower() in drop.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def unranked_starting_value_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = value, value = value)
+        for value in self.unrankedStartingValues if current.lower() in value.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -391,8 +432,29 @@ class ShowdownBot:
         results = results[:25]
       return results
     
-    # Set up dynamically-generated option list for challenges
-    challenges = self.googleSheetClient.getListFromBingoInfoSheet('Challenges')
+    async def record_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = record['nameAndHandicap'], value = record['name'] + '|' + str(record['handicap']))
+        for record in self.records if current.lower() in record['nameAndHandicap'].lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def challenge_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = challenge['nameAndRelayComponent'], value = challenge['name'] + '|' + str(challenge['relayComponent']))
+        for challenge in self.challenges if current.lower() in challenge['nameAndRelayComponent'].lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
 
     # Register commands
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
@@ -403,7 +465,9 @@ class ShowdownBot:
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
         raise errors.BingoUserError('Invalid monster name (make sure to click on the autocomplete option)')
-      submission = submissions.Submission(self, interaction, f'{kc} KC of {monster}')
+      description = f'{kc} KC of {monster}'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], monster, kc, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -415,7 +479,9 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
-      submission = submissions.Submission(self, interaction, f'Collection log item "{item}"')
+      description = f'Collection log item "{item}"'
+      ids = [self.backendClient.submitCollectionLogItem(self.discordUserRSNs[interaction.user.name], item, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -426,7 +492,9 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
-      submission = submissions.Submission(self, interaction, f'{total_games} games of pest control')
+      description = f'{total_games} games of pest control'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Pest Control Games', total_games, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -437,7 +505,9 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
-      submission = submissions.Submission(self, interaction, f'{kills} kills in LMS')
+      description = f'{kills} kills in LMS'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'LMS: Kills', kills, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -448,7 +518,13 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      submission = submissions.Submission(self, interaction, f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points')
+      description = f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points'
+      ids = []
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Alchemist's Playground", alchemy_points, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Creature Graveyard", graveyard_points, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Enchanting Chamber", enchanting_points, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Telekinetic Theatre", telekinetic_points, [screenshot.url], description))
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -459,7 +535,9 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
-      submission = submissions.Submission(self, interaction, f'{points} tithe farm points')
+      description = f'{points} tithe farm points'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Tithe Farm Points', points, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -470,7 +548,9 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
-      submission = submissions.Submission(self, interaction, f'{contracts} farming contracts')
+      description = f'{contracts} farming contracts'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Farming Contracts', contracts, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -501,20 +581,92 @@ class ShowdownBot:
           raise errors.BingoUserError('BA arguments cannot be negative')
         if('level' in argName and (argValue < 1 or argValue > 5)):
           raise errors.BingoUserError('BA levels must be 1-5')
-      submission = submissions.Submission(self, interaction, 'BA points')
+      points = 0
+      points += high_gambles * 500
+      points += attacker_points + defender_points + collector_points + healer_points
+      for level in [attacker_level, defender_level, collector_level, healer_level]:
+        if(level > 1):
+          points += 200
+        if(level > 2):
+          points += 300
+        if(level > 3):
+          points += 400
+        if(level > 4):
+          points += 500
+      points += hats * 275 * 4
+      points += torso * 375 * 4
+      points += skirt * 375 * 4
+      points += gloves * 150 * 4
+      points += boots * 100 * 4
+      description = f'{points} BA points'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [clog_screenshot.url, blackboard_screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
-    async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: Literal[tuple(challenges)]): # type: ignore - Tuple technically works for a Literal but isn't "proper"
+    @app_commands.autocomplete(challenge=challenge_autocomplete)
+    async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str):
       await self.checkForValidPlayer(interaction)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
         raise errors.BingoUserError('tenths_of_seconds cannot be greater than 9')
-      submission = submissions.Submission(self, interaction, "{0} time of {1:0>2}:{2:0>2}.{3}".format(challenge, minutes, seconds, tenths_of_seconds))
+      finalSeconds = (minutes * 10) + seconds + (tenths_of_seconds * 0.1)
+      challengeName = challenge.split('|')[0]
+      if(challenge.split('|')[1] != 'None'):
+        challengeName += ' - ' + challenge.split('|')[1]
+      description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challengeName, minutes, seconds, tenths_of_seconds)
+      ids = [self.backendClient.submitChallenge(self.discordUserRSNs[interaction.user.name], challenge, finalSeconds, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_record', description='Submit your record values for the bingo! Format for completed_at is "2025-05-30 16:00:00"')
+    @app_commands.autocomplete(record=record_autocomplete)
+    async def submit_record(interaction: Interaction, video_url: str, value: int, record: str, completed_at: str):
+      await self.checkForValidPlayer(interaction)
+      if(value < 0):
+        raise errors.BingoUserError('Value cannot be negative')
+      if(not re.match('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')):
+        raise errors.BingoUserError('Please use the datetime format: "2025-05-30 16:00:00"')
+      description = 'Record of {0} XP in {1}'.format(value, record.split('|')[0])
+      if(record.split('|')[1] != 'None'):
+        description += ' with handicap ' + record.split('|')[1]
+      ids = [self.backendClient.submitRecord(self.discordUserRSNs[interaction.user.name], record, value, video_url, completed_at, description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_unranked_starting_kc', description='Submit your real starting KC if you are unranked in a boss!')
+    @app_commands.autocomplete(boss=unranked_starting_value_autocomplete)
+    async def submit_unranked_starting_kc(interaction: Interaction, screenshot: Attachment, boss: str, kc: int):
+      await self.checkForValidPlayer(interaction)
+      if(kc < 0):
+        raise errors.BingoUserError('KC cannot be negative')
+      description = 'Starting KC of {0} for {1}'.format(kc, boss)
+      ids = [self.backendClient.submitUnrankedStartingKC(self.discordUserRSNs[interaction.user.name], boss, kc, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.createSubmission(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_item_drops', description='Submit the number of item drops you have! (Make sure to submit the TOTAL NUMBER from your log.)')
+    @app_commands.autocomplete(method=item_drop_autocomplete)
+    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, method: str, num_drops: int):
+      await self.checkForValidPlayer(interaction)
+      if(num_drops < 0):
+        raise errors.BingoUserError('KC cannot be negative')
+      description = '{0} drops from {1}'.format(num_drops, method)
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], method, num_drops, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
       await self.createSubmission(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
@@ -566,6 +718,10 @@ class ShowdownBot:
           submission = submissions.fromJson(submissionJson, self)
           log.info('Submission approved by ' + interaction.user.name + ':\n' + submissionJson)
 
+          # Send the approval to the backend
+          for id in submission.ids:
+            response = self.backendClient.approveSubmission(id)
+
           # Delete the submission message and any replies (which could exist because of error messages)
           submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)
           async for message in submissionQueueChannel.history(limit=None):
@@ -580,14 +736,6 @@ class ShowdownBot:
           # Send a message to the player's team submission channel
           submissionsChannel = self.teamSubmissionChannels[submission.team]
           await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been approved by {interaction.user.display_name}')
-
-          # Process the approval
-          try:
-            await submission.approve()
-          except Exception as error:
-            log.error('Error', exc_info=error)
-            await self.sendErrorMessageToErrorChannel(interaction, submission, error)
-            return
           
         if(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
 
@@ -602,6 +750,10 @@ class ShowdownBot:
           # Log the denial
           submission = submissions.fromJson(submissionJson, self)
           log.info('Submission denied by ' + interaction.user.name + ':\n' + submissionJson)
+
+          # Send the denial to the backend
+          for id in submission.ids:
+            response = self.backendClient.denySubmission(id)
 
           # Delete the submission message and any replies (which could exist because of error messages)
           submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)

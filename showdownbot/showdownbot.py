@@ -614,7 +614,7 @@ class ShowdownBot:
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
         raise errors.BingoUserError('tenths_of_seconds cannot be greater than 9')
-      finalSeconds = (minutes * 10) + seconds + (tenths_of_seconds * 0.1)
+      finalSeconds = (minutes * 60) + seconds + (tenths_of_seconds * 0.1)
       challengeName = challenge.split('|')[0]
       if(challenge.split('|')[1] != 'None'):
         challengeName += ' - ' + challenge.split('|')[1]

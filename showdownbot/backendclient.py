@@ -176,7 +176,7 @@ class BackendClient():
       'rsn': rsn,
       'skill': recordName.upper(),
       'handicapName': handicap,
-      'value': value,
+      'rawValue': value,
       'videoUrl': videoUrl,
       'completedAt': completedAt,
       'description': description

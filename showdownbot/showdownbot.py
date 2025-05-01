@@ -632,7 +632,7 @@ class ShowdownBot:
       await self.checkForValidPlayer(interaction)
       if(value < 0):
         raise errors.BingoUserError('Value cannot be negative')
-      if(not re.match('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')):
+      if(not re.match('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$', completed_at)):
         raise errors.BingoUserError('Please use the datetime format: "2025-05-30 16:00:00"')
       description = 'Record of {0} XP in {1}'.format(value, record.split('|')[0])
       if(record.split('|')[1] != 'None'):

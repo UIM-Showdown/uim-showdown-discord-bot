@@ -64,7 +64,7 @@ The following are the major components of this repo:
 
 * **showdownrunner.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
 * **showdownbot/showdownbot.py:** Defines the ShowdownBot class, which is a wrapper for the discord.py library's "Bot" class, contains most event logic, and defines command handler methods that act as the entry points for actions triggered by slash commands.
-* **submissions.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
+* **submission.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
 * **googlesheetclient.py:** Defines the GoogleSheetClient class for interfacing with the bingo info sheet.
 * **backendclient.py:** Defines the BackendClient class for interfacingf with the backend.
 * **errors.py:** Defines the BingoUserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)

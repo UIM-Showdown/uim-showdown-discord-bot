@@ -5,7 +5,7 @@ from datetime import datetime
 from discord.ext import commands
 from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
 import showdownbot.errors as errors
-import showdownbot.submissions as submissions
+import showdownbot.submission as submission
 from showdownbot.googlesheetclient import GoogleSheetClient
 from showdownbot.backendclient import BackendClient
 

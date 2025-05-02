@@ -4,8 +4,8 @@ from googleapiclient.discovery import build
 # Client for interacting with a Google sheet
 class GoogleSheetClient():
 
-  def __init__(self, bingoInfoSheetId):
-    self.bingoInfoSheetId = bingoInfoSheetId
+  def __init__(self, signupSheetId):
+    self.signupSheetId = signupSheetId
   
   def getSignedUpDiscordMembers(self):
     signedUpDiscordMembers = []
@@ -13,7 +13,7 @@ class GoogleSheetClient():
     with build('sheets', 'v4', credentials=creds) as service:
       spreadsheets = service.spreadsheets()
       rows = spreadsheets.values().get(
-        spreadsheetId = self.bingoInfoSheetId,
+        spreadsheetId = self.signupSheetId,
         range = 'Form Responses 1!D:D'
       ).execute().get('values', [])
       for row in rows:
@@ -22,13 +22,13 @@ class GoogleSheetClient():
         signedUpDiscordMembers.append(row[0].lower())
     return signedUpDiscordMembers
   
-  def getListFromBingoInfoSheet(self, tabName):
+  def getListFromsignupSheet(self, tabName):
     values = []
     creds = service_account.Credentials.from_service_account_file('google-creds.json', scopes=['https://www.googleapis.com/auth/spreadsheets'])
     with build('sheets', 'v4', credentials=creds) as service:
       spreadsheets = service.spreadsheets()
       rows = spreadsheets.values().get(
-        spreadsheetId = self.bingoInfoSheetId,
+        spreadsheetId = self.signupSheetId,
         range = tabName + '!A:A'
       ).execute().get('values', [])
       for row in rows:

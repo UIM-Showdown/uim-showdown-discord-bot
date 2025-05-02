@@ -28,9 +28,9 @@ class ShowdownBot:
     self.submissionLogChannelId = int(bingoProperties['submissionLogChannelId'])
     self.errorsChannelId = int(bingoProperties['errorsChannelId'])
     self.guildId = int(bingoProperties['guildId'])
-    self.bingoInfoSheetId = bingoProperties['bingoInfoSheetId']
+    self.signupSheetId = bingoProperties['signupSheetId']
     self.backendUrl = bingoProperties['backendUrl']
-    self.googleSheetClient = GoogleSheetClient(self.bingoInfoSheetId)
+    self.googleSheetClient = GoogleSheetClient(self.signupSheetId)
     self.backendClient = BackendClient(self.backendUrl)
 
     # Set up bot object
@@ -65,7 +65,7 @@ class ShowdownBot:
       raise errors.BingoUserError('User is not a screenshot approver')
   
   '''
-  Creates team roles/categories/channels and assigns team roles to players, using data from the bingo info sheet
+  Creates team roles/categories/channels and assigns team roles to players, using data from the signup sheet
   '''
   async def setUpServer(self):
     await self.updateCompetitorRole()
@@ -196,7 +196,7 @@ class ShowdownBot:
           await member.add_roles(teamRole)
 
   '''
-  Deletes team roles/categories/channels, using data from the bingo info sheet
+  Deletes team roles/categories/channels, using data from the signup sheet
   '''
   async def tearDownServer(self):
     teamInfo = self.backendClient.getTeamInfo()
@@ -242,7 +242,7 @@ class ShowdownBot:
         await member.remove_roles(captainRole)
 
   '''
-  Assigns the "Competitor" role, using data from the bingo info sheet
+  Assigns the "Competitor" role, using data from the signup sheet
   '''
   async def updateCompetitorRole(self):
     signedUpDiscordMembers = self.googleSheetClient.getSignedUpDiscordMembers()
@@ -337,7 +337,7 @@ class ShowdownBot:
         os._exit(0)
   
   '''
-  Populates instance variables coming from the bingo info sheet
+  Populates instance variables coming from the signup sheet
   '''
   def loadBingoInfo(self):
     log.info('Loading bingo info...')

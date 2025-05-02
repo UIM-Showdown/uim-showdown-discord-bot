@@ -112,7 +112,7 @@ class BackendClient():
     if(response.status_code == 400):
       raise Exception('Submission has already been approved or denied')
     if(response.status_code != 200):
-      raise Exception('Failed to approve submission')
+      raise Exception('Failed to approve decision, got status code: ' + str(response.status_code))
     return response.json()
     
   def denySubmission(self, id):
@@ -121,7 +121,15 @@ class BackendClient():
     if(response.status_code == 400):
       raise Exception('Submission has already been approved or denied')
     if(response.status_code != 200):
-      raise Exception('Failed to deny submission')
+      raise Exception('Failed to deny decision, got status code: ' + str(response.status_code))
+    return response.json()
+  
+  def undoDecision(self, id):
+    response = self.patch('/submissions/' + str(id) + '/undo', None)
+    if(response.status_code == 400):
+      raise Exception('Submission is already open')
+    if(response.status_code != 200):
+      raise Exception('Failed to undo decision, got status code: ' + str(response.status_code))
     return response.json()
     
   def submitContribution(self, rsn, method, value, urls, description):

@@ -92,7 +92,7 @@ The following are the major components of the ShowdownBot class:
 To add a new command to the bot, do the following:
 
 * If there is not already an appropriate submission method in BackendClient, add one. It must send the appropriate REST request to the backend to create the submission.
-* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call a submission method in self.backendClient, call self.createSubmission(), and then send a message back to confirm the action.
+* Add a function to the ShowdownBot's registerCommands() method annotated with @self.bot.tree.command to define the command and input validation logic. It must call a submission method in self.backendClient, call self.sendSubmissionToQueue(), and then send a message back to confirm the action.
 * To register the command in the Discord server, run the bot with the --updatecommands flag: `py -3 ./showdownrunner.py --updatecommands`
   * Try to avoid spamming command updates; Discord will rate-limit the bot if it receives too many update requests.
   * This is not necessary for changes to the code within a command; it is only needed when adding a new command, or changing the syntax of a command (i.e. what parameters it takes)

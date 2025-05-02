@@ -283,7 +283,7 @@ class ShowdownBot:
   '''
   Helper method to send a message to the submission queue to request approval for a submission
   '''
-  async def createSubmission(self, submission):
+  async def sendSubmissionToQueue(self, submission):
     log.info('Submission created:\n' + str(submission))
     submissionText = '# New submission:\n'
     submissionText += str(submission)
@@ -468,7 +468,7 @@ class ShowdownBot:
       description = f'{kc} KC of {monster}'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], monster, kc, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -482,7 +482,7 @@ class ShowdownBot:
       description = f'Collection log item "{item}"'
       ids = [self.backendClient.submitCollectionLogItem(self.discordUserRSNs[interaction.user.name], item, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -495,7 +495,7 @@ class ShowdownBot:
       description = f'{total_games} games of pest control'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Pest Control Games', total_games, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -508,7 +508,7 @@ class ShowdownBot:
       description = f'{kills} kills in LMS'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'LMS: Kills', kills, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -525,7 +525,7 @@ class ShowdownBot:
       ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Enchanting Chamber", enchanting_points, [screenshot.url], description))
       ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], "MTA: Telekinetic Theatre", telekinetic_points, [screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -538,7 +538,7 @@ class ShowdownBot:
       description = f'{points} tithe farm points'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Tithe Farm Points', points, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -551,7 +551,7 @@ class ShowdownBot:
       description = f'{contracts} farming contracts'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Farming Contracts', contracts, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -601,7 +601,7 @@ class ShowdownBot:
       description = f'{points} BA points'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [clog_screenshot.url, blackboard_screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -621,7 +621,7 @@ class ShowdownBot:
       description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challengeName, minutes, seconds, tenths_of_seconds)
       ids = [self.backendClient.submitChallenge(self.discordUserRSNs[interaction.user.name], challenge, finalSeconds, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -639,7 +639,7 @@ class ShowdownBot:
         description += ' with handicap ' + record.split('|')[1]
       ids = [self.backendClient.submitRecord(self.discordUserRSNs[interaction.user.name], record, value, video_url, completed_at, description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -653,7 +653,7 @@ class ShowdownBot:
       description = 'Starting KC of {0} for {1}'.format(kc, boss)
       ids = [self.backendClient.submitUnrankedStartingKC(self.discordUserRSNs[interaction.user.name], boss, kc, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -667,7 +667,7 @@ class ShowdownBot:
       description = '{0} drops from {1}'.format(num_drops, method)
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], method, num_drops, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
-      await self.createSubmission(submission)
+      await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
@@ -731,13 +731,15 @@ class ShowdownBot:
 
           # Send a message to the submission log
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
-          await submissionLogChannel.send(f'# Submission approved by {interaction.user.display_name}:\n' + str(submission))
+          view = ui.View()
+          view.add_item(ui.Button(style=ButtonStyle.grey, custom_id='undo', label='Undo'))
+          await submissionLogChannel.send(f'# Submission approved by {interaction.user.display_name}:\n' + str(submission), view=view)
 
           # Send a message to the player's team submission channel
           submissionsChannel = self.teamSubmissionChannels[submission.team]
           await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been approved by {interaction.user.display_name}')
           
-        if(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
+        elif(data['custom_id'] == 'deny'): # User has clicked the "Deny" button
 
           # Make sure the user is a screenshot approver
           try:
@@ -764,11 +766,41 @@ class ShowdownBot:
 
           # Send a message to the submission log
           submissionLogChannel = self.bot.get_channel(self.submissionLogChannelId)
-          await submissionLogChannel.send(f'# Submission denied by {interaction.user.display_name}:\n' + str(submission))
+          view = ui.View()
+          view.add_item(ui.Button(style=ButtonStyle.grey, custom_id='undo', label='Undo'))
+          await submissionLogChannel.send(f'# Submission denied by {interaction.user.display_name}:\n' + str(submission), view=view)
 
           # Send a message to the player's team submission channel
           submissionsChannel = self.teamSubmissionChannels[submission.team]
           await submissionsChannel.send(f'<@{submission.user.id}> Your {submission.shortDesc} has been denied by {interaction.user.display_name}')
+
+        elif(data['custom_id'] == 'undo'): # User has clicked the "Undo" button in the submission log
+
+          # Make sure the user is a screenshot approver
+          try:
+            await self.checkForScreenshotApprover(interaction)
+          except errors.BingoUserError as error:
+            log.error('Error', exc_info=error)
+            await interaction.response.send_message(f'Error: {interaction.user.display_name} tried to undo this decision but is not a screenshot approver')
+            return
+          
+          # Log the undo
+          submission = submissions.fromJson(submissionJson, self)
+          log.info('Submission undone by ' + interaction.user.name + ':\n' + submissionJson)
+
+          # Send the undo to the backend
+          for id in submission.ids:
+            response = self.backendClient.undoDecision(id)
+
+          # Delete the submission message and any replies (which could exist because of error messages)
+          submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)
+          async for message in submissionQueueChannel.history(limit=None):
+            if(message.reference and message.reference.message_id == interaction.message.id): # The message we're looking at is a reply to the submission message
+              await message.delete()
+          await interaction.message.delete()
+
+          # Send the submission back to the queue
+          await self.sendSubmissionToQueue(submission)
 
         else: # Something unexpected
           pass

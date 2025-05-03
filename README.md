@@ -67,7 +67,7 @@ The following are the major components of this repo:
 * **submissions.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
 * **googlesheetclient.py:** Defines the GoogleSheetClient class for interfacing with the signup sheet.
 * **backendclient.py:** Defines the BackendClient class for interfacingf with the backend.
-* **errors.py:** Defines the BingoUserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)
+* **errors.py:** Defines the UserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)
 
 ## The ShowdownBot Class
 
@@ -82,7 +82,7 @@ The following are the major components of the ShowdownBot class:
     * Register the interaction hook
     * Register the ready hook
 * **registerCommands():** Defines command callbacks and registers them with the bot. Each callback method is decorated with an @self.bot.tree.command decorator, which automatically adds the command to the bot's command tree.
-* **registerErrorHandler():** Defines and registers the error handler callback, which replies to the interaction with the exception message if it is a BingoUserError, and otherwise reports an internal error to the error channel.
+* **registerErrorHandler():** Defines and registers the error handler callback, which replies to the interaction with the exception message if it is a UserError, and otherwise reports an internal error to the error channel.
 * **registerInteractionHook():** Defines and registers the interaction hook for the bot, which is called upon all user interactions in the server. If the interaction is a button click on a button with ID "approve" or "deny", handles the action for approving or denying a submission.
 * **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the signup sheet and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. setting up or tearing down the server).
 * **start():** Calls run() on the underlying Bot object (from the discord.py library)
@@ -110,7 +110,7 @@ The bot does *not* handle this automatically, you will need to do most of it man
 **DO NOT INCLUDE THE CONFIG.INI FILE IN VERSION CONTROL; IT CONTAINS SECRETS. IT IS INCLUDED IN THE .GITIGNORE FILE SO IT WILL NOT BE AUTOMATICALLY INCLUDED.**
 
 ```
-[BingoProperties]
+[CompetitionProperties]
 token = <API token goes here>
 submissionQueueChannelId = <Channel ID for the submission queue channel goes here>
 submissionLogChannelId = <Channel ID for the submission log channel goes here>

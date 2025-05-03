@@ -351,6 +351,30 @@ class ShowdownBot:
 
     log.info('Registering commands...')
     # Set up autocomplete callbacks
+    async def team_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = team, value = team)
+        for team in self.teamSubmissionChannels if current.lower() in team.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def player_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = self.discordUserRSNs[discordName], value = self.discordUserRSNs[discordName])
+        for discordName in self.discordUserRSNs if current.lower() in self.discordUserRSNs[discordName].lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
     async def monster_autocomplete(
       interaction: Interaction,
       current: str
@@ -433,6 +457,20 @@ class ShowdownBot:
         await interaction.followup.send('Successfully reloaded competition info')
       else:
         await interaction.followup.send('Failed to reload competition info. The backend might not be running.')
+
+    @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player')
+    @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
+    async def change_player_team(interaction: Interaction, player: str, team: str):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        await interaction.response.send_message('Competition not loaded')
+      await interaction.response.send_message('Changing player team...')
+      self.backendClient.changePlayerTeam(player, team)
+      await self.loadCompetitionInfo()
+      if(self.competitionLoaded):
+        await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
+      else:
+        await interaction.followup.send('Failed to reload competition info after switching team. The backend might not be running.')
 
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the competition!')
     @app_commands.autocomplete(monster=monster_autocomplete)

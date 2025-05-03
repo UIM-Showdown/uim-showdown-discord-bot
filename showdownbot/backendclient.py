@@ -42,6 +42,15 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to get competition info')
     return response.json()
+  
+  def changePlayerTeam(self, player, team):
+    body = {
+      'rsn': player,
+      'teamName': team
+    }
+    response = self.patch('/admin/changePlayerTeam', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to get competition info')
 
   def getTeamRosters(self):
     rosters = {}

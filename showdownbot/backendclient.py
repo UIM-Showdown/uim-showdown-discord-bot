@@ -47,6 +47,11 @@ class BackendClient():
     response = self.post('/admin/initializeCompetition', None)
     if(response.status_code != 200):
       raise Exception('Failed to initialize backend')
+    
+  def updateBackend(self):
+    response = self.post('/admin/updateCompetition', None)
+    if(response.status_code != 200):
+      raise Exception('Failed to update backend')
   
   def changePlayerTeam(self, player, team):
     body = {

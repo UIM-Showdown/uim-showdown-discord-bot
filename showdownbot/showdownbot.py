@@ -486,10 +486,16 @@ class ShowdownBot:
       await interaction.response.send_message('Initializing backend...')
       self.backendClient.initializeBackend()
       await self.loadCompetitionInfo()
-      if(self.competitionLoaded):
-        await interaction.followup.send('Success: Backend initialized')
-      else:
-        await interaction.followup.send('Failed to reload competition info after initializing backend. The backend might not be running.')
+      await interaction.followup.send('Success: Backend initialized')
+
+    @self.bot.tree.command(name='update_backend', description='STAFF ONLY: Update the backend (This happens automatically every 60 seconds)')
+    async def update_backend(interaction: Interaction):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Updating backend...')
+      self.backendClient.updateBackend()
+      await interaction.followup.send('Success: Backend updated')
 
     @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')
     async def reload_competition_info(interaction: Interaction):
@@ -510,10 +516,7 @@ class ShowdownBot:
       await interaction.response.send_message('Changing player team...')
       self.backendClient.changePlayerTeam(player, team)
       await self.loadCompetitionInfo()
-      if(self.competitionLoaded):
-        await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
-      else:
-        await interaction.followup.send('Failed to reload competition info after switching team. The backend might not be running.')
+      await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
 
     @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
     @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)
@@ -524,10 +527,7 @@ class ShowdownBot:
       await interaction.response.send_message('Setting staff adjustment...')
       self.backendClient.setStaffAdjustment(player, method, adjustment)
       await self.loadCompetitionInfo()
-      if(self.competitionLoaded):
-        await interaction.followup.send('Success: Player ' + player + ' now has a staff adjustment of ' + str(adjustment) + ' for ' + method)
-      else:
-        await interaction.followup.send('Failed to reload competition info after setting staff adjustment. The backend might not be running.')
+      await interaction.followup.send('Success: Player ' + player + ' now has a staff adjustment of ' + str(adjustment) + ' for ' + method)
 
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the competition!')
     @app_commands.autocomplete(monster=monster_autocomplete)

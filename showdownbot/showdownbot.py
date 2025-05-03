@@ -142,6 +142,8 @@ class ShowdownBot:
 
       teamRosters = self.backendClient.getTeamRosters()
       teamInfo = self.backendClient.getTeamInfo()
+      self.players = []
+      self.teams = []
       for teamName in teamRosters:
         self.teams.append(teamName)
         teamTag = teamInfo[teamName]['tag']
@@ -223,6 +225,18 @@ class ShowdownBot:
       results = [
         app_commands.Choice(name = player, value = player)
         for player in self.players if current.lower() in player.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def discord_name_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = discordName, value = discordName)
+        for discordName in self.discordUserRSNs if current.lower() in discordName.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -412,7 +426,7 @@ class ShowdownBot:
       self.backendClient.reinitializeTile(tile)
       await interaction.followup.send('Success: Tile ' + tile + ' has been reinitialized')
 
-    @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player')
+    @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player. Also handles role changes.')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
     async def change_player_team(interaction: Interaction, player: str, team: str):
       await self.staffCheck(interaction)
@@ -422,6 +436,28 @@ class ShowdownBot:
       self.backendClient.changePlayerTeam(player, team)
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
+
+    @self.bot.tree.command(name='change_player_rsn', description='STAFF ONLY: Change the RSN of a player.')
+    @app_commands.autocomplete(old_rsn=player_autocomplete)
+    async def change_player_rsn(interaction: Interaction, old_rsn: str, new_rsn: str):
+      await self.staffCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Changing player RSN...')
+      self.backendClient.changePlayerRsn(old_rsn, new_rsn)
+      await self.loadCompetitionInfo()
+      await interaction.followup.send('Success: The RSN ' + old_rsn + ' has been changed to ' + new_rsn)
+
+    @self.bot.tree.command(name='change_player_discord_name', description='STAFF ONLY: Change the Discord name of a player.')
+    @app_commands.autocomplete(old_discord_name=discord_name_autocomplete)
+    async def change_player_discord_name(interaction: Interaction, old_discord_name: str, new_discord_name: str):
+      await self.staffCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Changing player Discord name...')
+      self.backendClient.changePlayerDiscordName(old_discord_name, new_discord_name)
+      await self.loadCompetitionInfo()
+      await interaction.followup.send('Success: The Discord name ' + old_discord_name + ' has been changed to ' + new_discord_name)
 
     @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
     @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)

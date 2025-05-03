@@ -74,6 +74,24 @@ class BackendClient():
     response = self.post('/admin/reinitializeTile/' + tile, None)
     if(response.status_code != 200):
       raise Exception('Failed to reinitialize tile')
+    
+  def changePlayerRsn(self, oldRsn, newRsn):
+    body = {
+      'oldRsn': oldRsn,
+      'newRsn': newRsn
+    }
+    response = self.patch('/admin/changePlayerRsn', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to change player RSN')
+    
+  def changePlayerDiscordName(self, oldDiscordName, newDiscordName):
+    body = {
+      'oldDiscordName': oldDiscordName,
+      'newDiscordName': newDiscordName
+    }
+    response = self.patch('/admin/changePlayerDiscordName', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to change player Discord name')
   
   def changePlayerTeam(self, player, team):
     body = {

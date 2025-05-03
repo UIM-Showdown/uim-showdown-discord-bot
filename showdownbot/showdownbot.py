@@ -504,6 +504,22 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Backend initialized')
 
+    @self.bot.tree.command(name='update_competitor_role', description='STAFF ONLY: Update the Competitor role (This happens automatically every 60 minutes)')
+    async def update_competitor_role(interaction: Interaction):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Updating competitor role...')
+      response = self.backendClient.updateCompetitorRole()
+      if(len(response['namesNotFound']) == 0):
+        await interaction.followup.send('Success: Competitor role updated. All Discord names were found on the server.')
+      else:
+        message = 'Success: Competitor role updated. The following Discord names were not found on the server:\n'
+        for name in response['namesNotFound']:
+          message += name + "\n"
+        message = message[:-1]
+        await interaction.followup.send(message)
+
     @self.bot.tree.command(name='update_backend', description='STAFF ONLY: Update the backend (This happens automatically every 60 seconds)')
     async def update_backend(interaction: Interaction):
       await self.adminCheck(interaction)

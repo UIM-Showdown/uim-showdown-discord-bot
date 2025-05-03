@@ -45,11 +45,20 @@ class ShowdownBot:
     self.registerInteractionHook()
 
   '''
-  Helper method to raise a BingoUserError if the user that spawned the interaction is not on a team (and therefore should not be able to use commands)
+  Helper method to make sure the person submitting the command is a competitor and is in the right channel
   '''
-  async def checkForValidPlayer(self, interaction):
+  async def preChecks(self, interaction):
     if(interaction.user.name not in self.discordUserRSNs):
       raise errors.BingoUserError(f'{interaction.user.display_name} is not a registered player in this event')
+    team = self.discordUserTeams[interaction.user.name]
+    teamChannel = self.teamSubmissionChannels[team]
+    if(interaction.channel != teamChannel):
+      raise errors.BingoUserError("Please only submit commands in your team's bot submission channel")
+    startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+    endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+    now = datetime.now().astimezone()
+    if(now < startDatetime or now > endDatetime):
+      raise errors.BingoUserError('The event is not currently in progress')
     
   '''
   Helper method to raise a BingoUserError if the user that spawned the interaction does not have the Screenshot Approver role (and therefore should not be able to approve/deny submissions)
@@ -346,7 +355,9 @@ class ShowdownBot:
     self.discordUserTeams = {}
     self.discordUserRSNs = {}
     self.teamSubmissionChannels = {}
+    self.competitionInfo = {}
     try:
+      self.competitionInfo = self.backendClient.getCompetitionInfo()
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
       self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
@@ -460,7 +471,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
     @app_commands.autocomplete(monster=monster_autocomplete)
     async def submit_monster_killcount(interaction: Interaction, screenshot: Attachment, monster: str, kc: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(kc < 0):
         raise errors.BingoUserError('KC cannot be negative')
       if(monster not in self.monsters):
@@ -476,7 +487,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_collection_log', description='Submit a collection log item for the bingo! (Make sure the drop is in the screenshot)')
     @app_commands.autocomplete(item=clog_autocomplete)
     async def submit_collection_log(interaction: Interaction, screenshot: Attachment, item: str):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(item not in self.clogItems):
         raise errors.BingoUserError('Invalid item name (make sure to click on the autocomplete option)')
       description = f'Collection log item "{item}"'
@@ -489,7 +500,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the bingo! (All difficulties added together)')
     async def submit_pest_control(interaction: Interaction, screenshot: Attachment, total_games: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(total_games < 0):
         raise errors.BingoUserError('Total games cannot be negative')
       description = f'{total_games} games of pest control'
@@ -502,7 +513,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_lms', description='Submit your LMS kills for the bingo!')
     async def submit_lms(interaction: Interaction, screenshot: Attachment, kills: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(kills < 0):
         raise errors.BingoUserError('Kills cannot be negative')
       description = f'{kills} kills in LMS'
@@ -515,7 +526,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_mta', description='Submit your MTA points for the bingo!')
     async def submit_mta(interaction: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.BingoUserError('Points cannot be negative')
       description = f'{alchemy_points}/{graveyard_points}/{enchanting_points}/{telekinetic_points} MTA points'
@@ -532,7 +543,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_tithe_farm', description='Submit your tithe farm points for the bingo!')
     async def submit_tithe_farm(interaction: Interaction, screenshot: Attachment, points: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(points < 0):
         raise errors.BingoUserError('Points cannot be negative')
       description = f'{points} tithe farm points'
@@ -545,7 +556,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_farming_contracts', description='Submit your farming contracts for the bingo!')
     async def submit_farming_contracts(interaction: Interaction, screenshot: Attachment, contracts: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(contracts < 0):
         raise errors.BingoUserError('Contracts cannot be negative')
       description = f'{contracts} farming contracts'
@@ -573,7 +584,7 @@ class ShowdownBot:
       gloves: int,
       boots: int
     ):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       for param in submit_barbarian_assault.parameters:
         argName = param.name
         argValue = locals()[argName]
@@ -609,7 +620,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the bingo! (Make sure to have precise timing enabled.)')
     @app_commands.autocomplete(challenge=challenge_autocomplete)
     async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.BingoUserError('Times cannot be negative')
       if(tenths_of_seconds > 9):
@@ -629,7 +640,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_record', description='Submit your record values for the bingo! Format for completed_at is "2025-05-30 16:00:00"')
     @app_commands.autocomplete(record=record_autocomplete)
     async def submit_record(interaction: Interaction, video_url: str, value: int, record: str, completed_at: str):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(value < 0):
         raise errors.BingoUserError('Value cannot be negative')
       if(not re.match('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$', completed_at)):
@@ -647,7 +658,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_unranked_starting_kc', description='Submit your real starting KC if you are unranked in a boss!')
     @app_commands.autocomplete(boss=unranked_starting_value_autocomplete)
     async def submit_unranked_starting_kc(interaction: Interaction, screenshot: Attachment, boss: str, kc: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(kc < 0):
         raise errors.BingoUserError('KC cannot be negative')
       description = 'Starting KC of {0} for {1}'.format(kc, boss)
@@ -661,7 +672,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='submit_item_drops', description='Submit the number of item drops you have! (Make sure to submit the TOTAL NUMBER from your log.)')
     @app_commands.autocomplete(method=item_drop_autocomplete)
     async def submit_item_drops(interaction: Interaction, screenshot: Attachment, method: str, num_drops: int):
-      await self.checkForValidPlayer(interaction)
+      await self.preChecks(interaction)
       if(num_drops < 0):
         raise errors.BingoUserError('KC cannot be negative')
       description = '{0} drops from {1}'.format(num_drops, method)

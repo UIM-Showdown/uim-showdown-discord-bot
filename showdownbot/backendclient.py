@@ -36,6 +36,12 @@ class BackendClient():
       return requests.delete(self.url + uri, json=data)
     except Exception as e:
       raise Exception('Failed to connect to backend', e)
+    
+  def getCompetitionInfo(self):
+    response = self.get('/competitionInfo')
+    if(response.status_code != 200):
+      raise Exception('Failed to get competition info')
+    return response.json()
 
   def getTeamRosters(self):
     rosters = {}

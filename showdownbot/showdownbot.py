@@ -47,6 +47,7 @@ class ShowdownBot:
     self.competitionInfo = {}
     self.players = []
     self.teams = []
+    self.tiles = []
     self.contributionMethods = []
     self.monsters = []
     self.itemDrops = []
@@ -306,10 +307,11 @@ class ShowdownBot:
       guild = self.bot.get_guild(self.guildId)
       channels = guild.channels
       self.competitionInfo = self.backendClient.getCompetitionInfo()
+      self.tiles = self.backendClient.getTiles()
+      self.contributionMethods = self.backendClient.getContributionMethods()
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
       self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
-      self.contributionMethods = self.backendClient.getContributionMethods()
       self.clogItems = self.backendClient.getCollectionLogItems()
       self.records = self.backendClient.getRecords()
       self.challenges = self.backendClient.getChallenges()
@@ -332,6 +334,7 @@ class ShowdownBot:
 
       self.players.sort()
       self.teams.sort()
+      self.tiles.sort()
       self.contributionMethods.sort()
       self.monsters.sort()
       self.itemDrops.sort()
@@ -347,6 +350,7 @@ class ShowdownBot:
       self.competitionInfo = {}
       self.players = []
       self.teams = []
+      self.tiles = []
       self.contributionMethods = []
       self.monsters = []
       self.itemDrops = []
@@ -364,6 +368,18 @@ class ShowdownBot:
 
     log.info('Registering commands...')
     # Set up autocomplete callbacks
+    async def tile_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = tile, value = tile)
+        for tile in self.tiles if current.lower() in tile.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+
     async def team_autocomplete(
       interaction: Interaction,
       current: str
@@ -506,6 +522,16 @@ class ShowdownBot:
         await interaction.followup.send('Successfully reloaded competition info')
       else:
         await interaction.followup.send('Failed to reload competition info. The backend might not be running.')
+
+    @self.bot.tree.command(name='reinitialize_tile', description='STAFF ONLY: Reinitialize a tile in the backend')
+    @app_commands.autocomplete(tile=tile_autocomplete)
+    async def reinitialize_tile(interaction: Interaction, tile: str):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Reinitializing tile...')
+      self.backendClient.reinitializeTile(tile)
+      await interaction.followup.send('Success: Tile ' + tile + ' has been reinitialized')
 
     @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)

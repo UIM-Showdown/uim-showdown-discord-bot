@@ -52,6 +52,11 @@ class BackendClient():
     response = self.post('/admin/updateCompetition', None)
     if(response.status_code != 200):
       raise Exception('Failed to update backend')
+    
+  def reinitializeTile(self, tile):
+    response = self.post('/admin/reinitializeTile/' + tile, None)
+    if(response.status_code != 200):
+      raise Exception('Failed to reinitialize tile')
   
   def changePlayerTeam(self, player, team):
     body = {
@@ -92,6 +97,15 @@ class BackendClient():
     for team in response.json():
       teamInfo[team['name']] = {'tag': team['abbreviation'], 'color': team['color']}
     return teamInfo
+  
+  def getTiles(self):
+    tiles = []
+    response = self.get('/tiles')
+    if(response.status_code != 200):
+      raise Exception('Failed to get tiles')
+    for tile in response.json():
+      tiles.append(tile['name'])
+    return tiles
   
   def getContributionMethods(self):
     methods = []

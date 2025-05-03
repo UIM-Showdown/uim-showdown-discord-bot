@@ -51,6 +51,16 @@ class BackendClient():
     response = self.patch('/admin/changePlayerTeam', body)
     if(response.status_code != 200):
       raise Exception('Failed to get competition info')
+    
+  def setStaffAdjustment(self, player, method, adjustment):
+    body = {
+      'rsn': player,
+      'contributionMethodName': method,
+      'adjustment': adjustment
+    }
+    response = self.post('/admin/setStaffAdjustment', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to set staff adjustment')
 
   def getTeamRosters(self):
     rosters = {}
@@ -72,6 +82,15 @@ class BackendClient():
     for team in response.json():
       teamInfo[team['name']] = {'tag': team['abbreviation'], 'color': team['color']}
     return teamInfo
+  
+  def getContributionMethods(self):
+    methods = []
+    response = self.get('/contributionMethods')
+    if(response.status_code != 200):
+      raise Exception('Failed to get contribution methods')
+    for method in response.json():
+      methods.append(method['name'])
+    return methods
   
   def getContributionMethodsByType(self, type):
     methods = []

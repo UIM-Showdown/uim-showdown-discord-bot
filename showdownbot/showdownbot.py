@@ -45,6 +45,9 @@ class ShowdownBot:
     self.discordUserRSNs = {}
     self.teamSubmissionChannels = {}
     self.competitionInfo = {}
+    self.players = []
+    self.teams = []
+    self.contributionMethods = []
     self.monsters = []
     self.itemDrops = []
     self.unrankedStartingValues = []
@@ -306,18 +309,15 @@ class ShowdownBot:
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
       self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
+      self.contributionMethods = self.backendClient.getContributionMethods()
       self.clogItems = self.backendClient.getCollectionLogItems()
       self.records = self.backendClient.getRecords()
       self.challenges = self.backendClient.getChallenges()
 
-      self.monsters.sort()
-      self.itemDrops.sort()
-      self.unrankedStartingValues.sort()
-      self.clogItems.sort()
-
       teamRosters = self.backendClient.getTeamRosters()
       teamInfo = self.backendClient.getTeamInfo()
       for teamName in teamRosters:
+        self.teams.append(teamName)
         teamTag = teamInfo[teamName]['tag']
         teamBotSubmissionChannelName = teamTag.lower() + '-bot-submissions'
         for channel in channels:
@@ -326,8 +326,18 @@ class ShowdownBot:
         if(teamName not in self.teamSubmissionChannels):
           self.teamSubmissionChannels[teamName] = None
         for player in teamRosters[teamName]:
+          self.players.append(player['rsn'])
           self.discordUserRSNs[player['discordName']] = player['rsn']
           self.discordUserTeams[player['discordName']] = teamName
+
+      self.players.sort()
+      self.teams.sort()
+      self.contributionMethods.sort()
+      self.monsters.sort()
+      self.itemDrops.sort()
+      self.unrankedStartingValues.sort()
+      self.clogItems.sort()
+
       self.competitionLoaded = True
       log.info('Competition info loaded!')
     except Exception as e: # The backend is likely not running, but we can still silently succeed without actually changing anything
@@ -335,6 +345,9 @@ class ShowdownBot:
       self.discordUserRSNs = {}
       self.teamSubmissionChannels = {}
       self.competitionInfo = {}
+      self.players = []
+      self.teams = []
+      self.contributionMethods = []
       self.monsters = []
       self.itemDrops = []
       self.unrankedStartingValues = []
@@ -357,7 +370,7 @@ class ShowdownBot:
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = team, value = team)
-        for team in self.teamSubmissionChannels if current.lower() in team.lower()
+        for team in self.teams if current.lower() in team.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -368,8 +381,20 @@ class ShowdownBot:
       current: str
     ) -> list[app_commands.Choice[str]]:
       results = [
-        app_commands.Choice(name = self.discordUserRSNs[discordName], value = self.discordUserRSNs[discordName])
-        for discordName in self.discordUserRSNs if current.lower() in self.discordUserRSNs[discordName].lower()
+        app_commands.Choice(name = player, value = player)
+        for player in self.players if current.lower() in player.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def method_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = method, value = method)
+        for method in self.contributionMethods if current.lower() in method.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -471,6 +496,20 @@ class ShowdownBot:
         await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
       else:
         await interaction.followup.send('Failed to reload competition info after switching team. The backend might not be running.')
+
+    @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
+    @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)
+    async def change_player_team(interaction: Interaction, player: str, method: str, adjustment: int):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        await interaction.response.send_message('Competition not loaded')
+      await interaction.response.send_message('Setting staff adjustment...')
+      self.backendClient.setStaffAdjustment(player, method, adjustment)
+      await self.loadCompetitionInfo()
+      if(self.competitionLoaded):
+        await interaction.followup.send('Success: Player ' + player + ' now has a staff adjustment of ' + str(adjustment) + ' for ' + method)
+      else:
+        await interaction.followup.send('Failed to reload competition info after setting staff adjustment. The backend might not be running.')
 
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the competition!')
     @app_commands.autocomplete(monster=monster_autocomplete)

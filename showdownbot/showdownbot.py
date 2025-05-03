@@ -295,45 +295,6 @@ class ShowdownBot:
     await self.bot.get_channel(self.submissionQueueChannelId).send(submissionText, view=view)
   
   '''
-  Checks for command line arguments indicating alternate run commands, and executes them, exiting afterwards
-  '''
-  async def handleAlternateRunCommands(self, commandLineArgs):
-    if(commandLineArgs.clearcommands):
-      log.info('Clearing commands...')
-      guild = self.bot.get_guild(self.guildId)
-      self.bot.tree.clear_commands(guild=None)
-      self.bot.tree.clear_commands(guild=guild)
-      await self.bot.tree.sync(guild=None)
-      await self.bot.tree.sync(guild=guild)
-      log.info('Commands cleared')
-      os._exit(0)
-    if(commandLineArgs.updatecommands):
-      log.info('Updating commands...')
-      synced = await self.bot.tree.sync()
-      log.info(f'Synced {len(synced)} commands.')
-      os._exit(0)
-    if(commandLineArgs.setupserver):
-      response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
-      if(response.lower() == 'y'):
-        log.info('Starting server setup...')
-        await self.setUpServer()
-        log.info('Server setup completed')
-        os._exit(0)
-      else:
-        log.info('Exiting...')
-        os._exit(0)
-    if(commandLineArgs.teardownserver):
-      response = input('Are you sure you want to DELETE ALL THE TEAM CHANNELS AND ROLES? This is very dangerous (Y/N): ')
-      if(response.lower() == 'y'):
-        log.info('Starting server teardown...')
-        await self.tearDownServer()
-        log.info('Server teardown completed')
-        os._exit(0)
-      else:
-        log.info('Exiting...')
-        os._exit(0)
-  
-  '''
   Populates instance variables coming from the backend
   '''
   async def loadCompetitionInfo(self):
@@ -833,7 +794,41 @@ class ShowdownBot:
     async def on_ready():
       log.info(f'Logged in as {self.bot.user.name}')
 
-      await self.handleAlternateRunCommands(commandLineArgs)
+      if(commandLineArgs.clearcommands):
+        log.info('Clearing commands...')
+        guild = self.bot.get_guild(self.guildId)
+        self.bot.tree.clear_commands(guild=None)
+        self.bot.tree.clear_commands(guild=guild)
+        await self.bot.tree.sync(guild=None)
+        await self.bot.tree.sync(guild=guild)
+        log.info('Commands cleared')
+        os._exit(0)
+      if(commandLineArgs.updatecommands):
+        log.info('Updating commands...')
+        synced = await self.bot.tree.sync()
+        log.info(f'Synced {len(synced)} commands.')
+        os._exit(0)
+      if(commandLineArgs.setupserver):
+        response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
+        if(response.lower() == 'y'):
+          log.info('Starting server setup...')
+          await self.setUpServer()
+          log.info('Server setup completed')
+          os._exit(0)
+        else:
+          log.info('Exiting...')
+          os._exit(0)
+      if(commandLineArgs.teardownserver):
+        response = input('Are you sure you want to DELETE ALL THE TEAM CHANNELS AND ROLES? This is very dangerous (Y/N): ')
+        if(response.lower() == 'y'):
+          log.info('Starting server teardown...')
+          await self.tearDownServer()
+          log.info('Server teardown completed')
+          os._exit(0)
+        else:
+          log.info('Exiting...')
+          os._exit(0)
+          
       await self.loadCompetitionInfo()
 
       log.info('Startup complete, ready to accept commands!')

@@ -11,19 +11,7 @@ A Discord bot created for the UIM Showdown competition, implemented in Python an
   * Install the "discord.py" package via pip:
     * Windows: `py -3 -m pip install -U discord.py`
     * Linux: `python3 -m pip install -U discord.py`
-  * Install the Google APIs via pip:
-    * Windows: `py -3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
-    * Linux: `python3 -m pip install -U google-api-python-client google-auth-httplib2 google-auth-oauthlib`
-* Set up the required Google sheets
-  * The signup sheet should have the following tabs:
-    * Form Responses 1 - The output of the signup form, used for detecting signups to grant the Competitor role. The bot reads the Discord tag from the fourth column, as it is the fourth question in the signup form.
-  * The Google service account's email address (ending in ".iam.gserviceaccount.com") should have viewer access to the signup sheet.
-* Download the credential file for the Google Cloud service account and save it to the directory as "google-creds.json"
 * Create a config.ini file at the root of the project directory (format documented below)
-* At this point, you can begin calling the --updatecompetitorrole command on a scheduled job to automatically add the "Competitor" role to all signed up Discord members:
-  * Windows: `py -3 ./showdownrunner.py --updatecompetitorrole`
-  * Linux: `python3 ./showdownrunner.py --updatecompetitorrole`
-* Once the draft is complete, populate the "Team Rosters" and "Team Info" tabs on the signup sheet
 * Set up the team roles/categories/channels:
   * Windows: `py -3 ./showdownrunner.py --setupserver`
   * Linux: `python3 ./showdownrunner.py --setupserver`
@@ -65,7 +53,6 @@ The following are the major components of this repo:
 * **showdownrunner.py:** Runner script for the bot, reads config file and command-line input, constructs a ShowdownBot object, and calls run() on it.
 * **showdownbot/showdownbot.py:** Defines the ShowdownBot class, which is a wrapper for the discord.py library's "Bot" class, contains most event logic, and defines command handler methods that act as the entry points for actions triggered by slash commands.
 * **submissions.py:** Defines the Submission class, which contains information for a submission made via the bot. Also contains serializer/deserializer methods for the class so that a submission can be included within the text of a Discord message (this is used to store state between when a submission is made and when it is approved).
-* **googlesheetclient.py:** Defines the GoogleSheetClient class for interfacing with the signup sheet.
 * **backendclient.py:** Defines the BackendClient class for interfacingf with the backend.
 * **errors.py:** Defines the UserError class, which inherits from Exception and represents an exception that is caused by user error (e.g. invalid input)
 
@@ -84,7 +71,7 @@ The following are the major components of the ShowdownBot class:
 * **registerCommands():** Defines command callbacks and registers them with the bot. Each callback method is decorated with an @self.bot.tree.command decorator, which automatically adds the command to the bot's command tree.
 * **registerErrorHandler():** Defines and registers the error handler callback, which replies to the interaction with the exception message if it is a UserError, and otherwise reports an internal error to the error channel.
 * **registerInteractionHook():** Defines and registers the interaction hook for the bot, which is called upon all user interactions in the server. If the interaction is a button click on a button with ID "approve" or "deny", handles the action for approving or denying a submission.
-* **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the signup sheet and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. setting up or tearing down the server).
+* **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the backend and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. setting up or tearing down the server).
 * **start():** Calls run() on the underlying Bot object (from the discord.py library)
 
 ## Adding a command
@@ -102,8 +89,7 @@ To add a new command to the bot, do the following:
 The bot does *not* handle this automatically, you will need to do most of it manually:
 
 * Update the team roster in the backend
-* Modify the Discord roles for the relevant players as needed
-* If the bot is currently running, restart it so it can pull the new version of the signup sheet at startup
+* Use the staff-only "/reload_competition_info" command to pull the new roster from the backend
 
 ## config.ini format
 
@@ -116,6 +102,5 @@ submissionQueueChannelId = <Channel ID for the submission queue channel goes her
 submissionLogChannelId = <Channel ID for the submission log channel goes here>
 errorsChannelId = <Channel ID for the errors channel goes here>
 guildId = <Discord server ID goes here>
-signupSheetId = <Google Sheets spreadsheet ID for signup info goes here>
 backendUrl = <Base URL for backend goes here, e.g. http://localhost:8080>
 ```

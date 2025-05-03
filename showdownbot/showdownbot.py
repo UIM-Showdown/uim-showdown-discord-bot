@@ -6,7 +6,6 @@ from discord.ext import commands
 from discord import utils, Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
 import showdownbot.errors as errors
 import showdownbot.submissions as submissions
-from showdownbot.googlesheetclient import GoogleSheetClient
 from showdownbot.backendclient import BackendClient
 
 log = logging.getLogger('showdown')
@@ -28,9 +27,7 @@ class ShowdownBot:
     self.submissionLogChannelId = int(competitionProperties['submissionLogChannelId'])
     self.errorsChannelId = int(competitionProperties['errorsChannelId'])
     self.guildId = int(competitionProperties['guildId'])
-    self.signupSheetId = competitionProperties['signupSheetId']
     self.backendUrl = competitionProperties['backendUrl']
-    self.googleSheetClient = GoogleSheetClient(self.signupSheetId)
     self.backendClient = BackendClient(self.backendUrl)
 
     # Set up bot object
@@ -80,10 +77,9 @@ class ShowdownBot:
       raise errors.UserError('User is not a screenshot approver')
   
   '''
-  Creates team roles/categories/channels and assigns team roles to players, using data from the signup sheet
+  Creates team roles/categories/channels and assigns team roles to players, using data from the backend
   '''
   async def setUpServer(self):
-    await self.updateCompetitorRole()
     teamInfo = self.backendClient.getTeamInfo()
     teamRosters = self.backendClient.getTeamRosters()
     guild = self.bot.get_guild(self.guildId)
@@ -211,7 +207,7 @@ class ShowdownBot:
           await member.add_roles(teamRole)
 
   '''
-  Deletes team roles/categories/channels, using data from the signup sheet
+  Deletes team roles/categories/channels, using data from the backend
   '''
   async def tearDownServer(self):
     teamInfo = self.backendClient.getTeamInfo()
@@ -255,29 +251,6 @@ class ShowdownBot:
     for member in guild.members:
       if(member.get_role(captainRole.id)):
         await member.remove_roles(captainRole)
-
-  '''
-  Assigns the "Competitor" role, using data from the signup sheet
-  '''
-  async def updateCompetitorRole(self):
-    signedUpDiscordMembers = self.googleSheetClient.getSignedUpDiscordMembers()
-    guild = self.bot.get_guild(self.guildId)
-    roles = guild.roles
-    competitorRole = None
-    for role in roles:
-      if(role.name == 'Competitor'):
-        competitorRole = role
-    if(competitorRole is None):
-      log.error('Could not find role named "Competitor". Exiting...')
-      os._exit(1)
-
-    for signedUpDiscordMember in signedUpDiscordMembers:
-      member = guild.get_member_named(signedUpDiscordMember)
-      if(member is None):
-        log.error('Could not find Discord server member named "' + signedUpDiscordMember + '". Continuing...')
-        continue
-      if(not member.get_role(competitorRole.id)):
-        await member.add_roles(competitorRole)
 
   '''
   Helper method to send a message to the error channel to report an error, and respond to the original interaction to notify the user that the error has been reported
@@ -325,11 +298,6 @@ class ShowdownBot:
       synced = await self.bot.tree.sync()
       log.info(f'Synced {len(synced)} commands.')
       os._exit(0)
-    if(commandLineArgs.updatecompetitorrole):
-      log.info('Updating competitor role...')
-      await self.updateCompetitorRole()
-      log.info('Competitor role updated')
-      os._exit(0)
     if(commandLineArgs.setupserver):
       response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
       if(response.lower() == 'y'):
@@ -352,7 +320,7 @@ class ShowdownBot:
         os._exit(0)
   
   '''
-  Populates instance variables coming from the signup sheet
+  Populates instance variables coming from the backend
   '''
   def loadCompetitionInfo(self):
     log.info('Loading competition info...')

@@ -53,6 +53,17 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to update competitor role')
     return response.json()
+  
+  def setupDiscordServer(self):
+    response = self.post('/admin/setupDiscordServer', None)
+    if(response.status_code != 200):
+      raise Exception('Failed to setup Discord server')
+    return response.json()
+  
+  def teardownDiscordServer(self):
+    response = self.post('/admin/teardownDiscordServer', None)
+    if(response.status_code != 200):
+      raise Exception('Failed to teardown Discord server')
     
   def updateBackend(self):
     response = self.post('/admin/updateCompetition', None)

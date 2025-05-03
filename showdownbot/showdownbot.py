@@ -75,7 +75,7 @@ class ShowdownBot:
     if(teamChannel is None or interaction.channel != teamChannel):
       raise errors.UserError("Please only submit commands in your team's bot submission channel")
     
-  async def adminCheck(self, interaction):
+  async def staffCheck(self, interaction):
     isStaff = False
     staffRole = utils.find(lambda r: r.name == 'Event staff', self.bot.get_guild(self.guildId).roles)
     if(staffRole not in interaction.user.roles):
@@ -93,182 +93,6 @@ class ShowdownBot:
         break
     if(not hasApproverRole):
       raise errors.UserError('User is not a screenshot approver')
-  
-  '''
-  Creates team roles/categories/channels and assigns team roles to players, using data from the backend
-  '''
-  async def setUpServer(self):
-    teamInfo = self.backendClient.getTeamInfo()
-    teamRosters = self.backendClient.getTeamRosters()
-    guild = self.bot.get_guild(self.guildId)
-    roles = guild.roles
-    channels = guild.channels
-    eventStaffRole = None
-    captainRole = None
-    cheerleaderRole = None
-    for role in roles:
-      if(role.name == 'Event staff'):
-        eventStaffRole = role
-      if(role.name == 'Captain'):
-        captainRole = role
-      if(role.name == 'Cheerleader'):
-        cheerleaderRole = role
-    if(eventStaffRole is None):
-      log.error('Could not find event staff role. Exiting...')
-      os._exit(1)
-    if(captainRole is None):
-      log.error('Could not find captain role. Exiting...')
-      os._exit(1)
-    if(cheerleaderRole is None):
-      log.error('Could not find cheerleader role. Exiting...')
-      os._exit(1)
-
-    for teamName in teamInfo:
-      # Create team role
-      teamRole = None
-      for role in roles:
-        if(role.name == teamName):
-          teamRole = role
-      if(teamRole is None):
-        teamRole = await guild.create_role(
-          name = teamName,
-          color = Colour.from_str('#' + teamInfo[teamName]['color'])
-        )
-
-      # Create team category
-      category = None
-      for channel in channels:
-        if(isinstance(channel, CategoryChannel) and channel.name == teamName):
-          category = channel
-      if(category is None):
-        category = await guild.create_category(
-          name = teamName,
-          overwrites = {
-            guild.default_role: PermissionOverwrite(view_channel = False),
-            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
-            teamRole: PermissionOverwrite(view_channel = True, attach_files = True),
-            cheerleaderRole: PermissionOverwrite(view_channel = True, attach_files = True),
-            captainRole: PermissionOverwrite(manage_channels = True, manage_messages = True)
-          }
-        )
-
-      # Create announcements text channel
-      announcementsTextChannel = None
-      announcementsTextChannelName = teamInfo[teamName]['tag'].lower() + '-announcements'
-      for channel in channels:
-        if(isinstance(channel, TextChannel) and channel.name == announcementsTextChannelName):
-          announcementsTextChannel = channel
-      if(announcementsTextChannel is None):
-        announcementsTextChannel = await guild.create_text_channel(
-          name = announcementsTextChannelName,
-          category = category,
-          overwrites = {
-            guild.default_role: PermissionOverwrite(view_channel = False),
-            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
-            teamRole: PermissionOverwrite(view_channel = True, send_messages = False),
-            cheerleaderRole: PermissionOverwrite(view_channel = True, send_messages = False),
-            captainRole: PermissionOverwrite(send_messages = True, manage_messages = True)
-          }
-        )
-
-      # Create general text channel
-      generalTextChannel = None
-      generalTextChannelName = teamInfo[teamName]['tag'].lower() + '-general'
-      for channel in channels:
-        if(isinstance(channel, TextChannel) and channel.name == generalTextChannelName):
-          generalTextChannel = channel
-      if(generalTextChannel is None):
-        generalTextChannel = await guild.create_text_channel(
-          name = generalTextChannelName,
-          category = category
-        )
-      
-      # Create general voice channel
-      generalVoiceChannel = None
-      generalVoiceChannelName = teamInfo[teamName]['tag'].lower() + '-general'
-      for channel in channels:
-        if(isinstance(channel, VoiceChannel) and channel.name == generalVoiceChannelName):
-          generalVoiceChannel = channel
-      if(generalVoiceChannel is None):
-        generalVoiceChannel = await guild.create_voice_channel(
-          name = generalVoiceChannelName,
-          category = category
-        )
-      
-      # Create bot submissions channel
-      botSubmissionsChannel = None
-      botSubmissionsChannelName = teamInfo[teamName]['tag'].lower() + '-bot-submissions'
-      for channel in channels:
-        if(isinstance(channel, TextChannel) and channel.name == botSubmissionsChannelName):
-          botSubmissionsChannel = channel
-      if(botSubmissionsChannel is None):
-        botSubmissionsChannel = await guild.create_text_channel(
-          name = botSubmissionsChannelName,
-          category = category,
-          overwrites = {
-            guild.default_role: PermissionOverwrite(view_channel = False),
-            eventStaffRole: PermissionOverwrite(view_channel = True, administrator = True),
-            teamRole: PermissionOverwrite(view_channel = True),
-            cheerleaderRole: PermissionOverwrite(view_channel = True),
-            captainRole: PermissionOverwrite(manage_channels = False)
-          }
-        )
-
-      # Assign team roles to players
-      teamRoster = teamRosters[teamName]
-      for player in teamRoster:
-        member = guild.get_member_named(player['discordName'])
-        if(member is None):
-          log.error('Could not find Discord server member named "' + player['discordName'] + '". Continuing...')
-          continue
-        if(not member.get_role(teamRole.id)):
-          await member.add_roles(teamRole)
-
-  '''
-  Deletes team roles/categories/channels, using data from the backend
-  '''
-  async def tearDownServer(self):
-    teamInfo = self.backendClient.getTeamInfo()
-    guild = self.bot.get_guild(self.guildId)
-    roles = guild.roles
-    channels = guild.channels
-    competitorRole = None
-    captainRole = None
-    for role in roles:
-      if(role.name == 'Competitor'):
-        competitorRole = role
-      if(role.name == 'Captain'):
-        captainRole = role
-    if(competitorRole is None):
-      log.error('Could not find role named "Competitor". Exiting...')
-      os._exit(1)
-    if(captainRole is None):
-      log.error('Could not find role named "Captain". Exiting...')
-      os._exit(1)
-    
-    for teamName in teamInfo:
-      # Delete team channels
-      for channel in channels:
-        if(isinstance(channel, CategoryChannel) and channel.name == teamName):
-          category = channel
-          for channelInCategory in category.channels:
-            await channelInCategory.delete()
-          await category.delete()
-
-      # Delete team role
-      for role in roles:
-        if(role.name == teamName):
-          await role.delete()
-
-    # De-assign competitor role
-    for member in guild.members:
-      if(member.get_role(competitorRole.id)):
-        await member.remove_roles(competitorRole)
-
-    # De-assign captain role
-    for member in guild.members:
-      if(member.get_role(captainRole.id)):
-        await member.remove_roles(captainRole)
 
   '''
   Helper method to send a message to the error channel to report an error, and respond to the original interaction to notify the user that the error has been reported
@@ -491,7 +315,7 @@ class ShowdownBot:
     # Register commands
     @self.bot.tree.command(name='initialize_backend', description='STAFF ONLY: Initialize the backend (will not work if the event is in progress)')
     async def initialize_backend(interaction: Interaction):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
@@ -506,13 +330,15 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='update_competitor_role', description='STAFF ONLY: Update the Competitor role (This happens automatically every 60 minutes)')
     async def update_competitor_role(interaction: Interaction):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Updating competitor role...')
       response = self.backendClient.updateCompetitorRole()
       if(len(response['namesNotFound']) == 0):
         await interaction.followup.send('Success: Competitor role updated. All Discord names were found on the server.')
+      elif(len(response['namesNotFound']) > 50):
+        await interaction.followup.send('Success: Competitor role updated. ' + str(len(response['namesNotFound'])) + ' names were not found on the server.')
       else:
         message = 'Success: Competitor role updated. The following Discord names were not found on the server:\n'
         for name in response['namesNotFound']:
@@ -520,9 +346,46 @@ class ShowdownBot:
         message = message[:-1]
         await interaction.followup.send(message)
 
+    @self.bot.tree.command(name='setup_discord_server', description='STAFF ONLY: Create team channels and create/assign team roles')
+    async def setup_discord_server(interaction: Interaction):
+      await self.staffCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+      now = datetime.now().astimezone()
+      if(now > startDatetime and now < endDatetime):
+        raise errors.UserError('The event is currently in progress')
+      await interaction.response.send_message('Setting up Discord server...')
+      response = self.backendClient.setupDiscordServer()
+      if(len(response['namesNotFound']) == 0):
+        await interaction.followup.send('Success: Team roles/channels created. All Discord names were found on the server.')
+      elif(len(response['namesNotFound']) > 50):
+        await interaction.followup.send('Success: Team roles/channels created. ' + str(len(response['namesNotFound'])) + ' names were not found on the server.')
+      else:
+        message = 'Success: Team roles/channels created. The following Discord names were not found on the server:\n'
+        for name in response['namesNotFound']:
+          message += name + "\n"
+        message = message[:-1]
+        await interaction.followup.send(message)
+
+    @self.bot.tree.command(name='teardown_discord_server', description='STAFF ONLY: Delete team channels/roles and de-assign Competitor/Captain roles')
+    async def teardown_discord_server(interaction: Interaction):
+      await self.staffCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+      now = datetime.now().astimezone()
+      if(now > startDatetime and now < endDatetime):
+        raise errors.UserError('The event is currently in progress')
+      await interaction.response.send_message('Tearing down Discord server...')
+      self.backendClient.teardownDiscordServer()
+      await interaction.followup.send('Success: Team roles/channels deleted; Competitor/Captain roles de-assigned.')
+
     @self.bot.tree.command(name='update_backend', description='STAFF ONLY: Update the backend (This happens automatically every 60 seconds)')
     async def update_backend(interaction: Interaction):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Updating backend...')
@@ -531,7 +394,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')
     async def reload_competition_info(interaction: Interaction):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       await interaction.response.send_message('Reloading competition info...')
       await self.loadCompetitionInfo()
       if(self.competitionLoaded):
@@ -542,7 +405,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='reinitialize_tile', description='STAFF ONLY: Reinitialize a tile in the backend')
     @app_commands.autocomplete(tile=tile_autocomplete)
     async def reinitialize_tile(interaction: Interaction, tile: str):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Reinitializing tile...')
@@ -552,7 +415,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
     async def change_player_team(interaction: Interaction, player: str, team: str):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Changing player team...')
@@ -563,7 +426,7 @@ class ShowdownBot:
     @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
     @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)
     async def set_staff_adjustment(interaction: Interaction, player: str, method: str, adjustment: int):
-      await self.adminCheck(interaction)
+      await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Setting staff adjustment...')
@@ -945,26 +808,6 @@ class ShowdownBot:
         synced = await self.bot.tree.sync()
         log.info(f'Synced {len(synced)} commands.')
         os._exit(0)
-      if(commandLineArgs.setupserver):
-        response = input('Are you sure you want to start the server setup process? This will create categories/channels/roles for every team and assign roles to players (Y/N): ')
-        if(response.lower() == 'y'):
-          log.info('Starting server setup...')
-          await self.setUpServer()
-          log.info('Server setup completed')
-          os._exit(0)
-        else:
-          log.info('Exiting...')
-          os._exit(0)
-      if(commandLineArgs.teardownserver):
-        response = input('Are you sure you want to DELETE ALL THE TEAM CHANNELS AND ROLES? This is very dangerous (Y/N): ')
-        if(response.lower() == 'y'):
-          log.info('Starting server teardown...')
-          await self.tearDownServer()
-          log.info('Server teardown completed')
-          os._exit(0)
-        else:
-          log.info('Exiting...')
-          os._exit(0)
           
       await self.loadCompetitionInfo()
 

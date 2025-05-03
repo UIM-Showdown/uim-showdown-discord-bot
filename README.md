@@ -12,9 +12,6 @@ A Discord bot created for the UIM Showdown competition, implemented in Python an
     * Windows: `py -3 -m pip install -U discord.py`
     * Linux: `python3 -m pip install -U discord.py`
 * Create a config.ini file at the root of the project directory (format documented below)
-* Set up the team roles/categories/channels:
-  * Windows: `py -3 ./showdownrunner.py --setupserver`
-  * Linux: `python3 ./showdownrunner.py --setupserver`
 * Update the command list in the server:
   * Windows: `py -3 ./showdownrunner.py --updatecommands`
   * Linux: `python3 ./showdownrunner.py --updatecommands`
@@ -22,9 +19,6 @@ A Discord bot created for the UIM Showdown competition, implemented in Python an
   * Windows: `py -3 ./showdownrunner.py`
   * Linux: `python3 ./showdownrunner.py`
   * This command will continue running until the process is killed
-* After the event is over, you can also automatically delete the team roles/categories/channels:
-  * Windows: `py -3 ./showdownrunner.py --teardownserver`
-  * Linux: `python3 ./showdownrunner.py --teardownserver`
 
 ## Discord Permissions
 
@@ -71,7 +65,7 @@ The following are the major components of the ShowdownBot class:
 * **registerCommands():** Defines command callbacks and registers them with the bot. Each callback method is decorated with an @self.bot.tree.command decorator, which automatically adds the command to the bot's command tree.
 * **registerErrorHandler():** Defines and registers the error handler callback, which replies to the interaction with the exception message if it is a UserError, and otherwise reports an internal error to the error channel.
 * **registerInteractionHook():** Defines and registers the interaction hook for the bot, which is called upon all user interactions in the server. If the interaction is a button click on a button with ID "approve" or "deny", handles the action for approving or denying a submission.
-* **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the backend and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. setting up or tearing down the server).
+* **registerReadyHook():** Defines and registers the ready hook, which is called upon first connecting to Discord. Calls methods to populate instance variables with data from the backend and the Discord server, and to handle command-line flags that cause the bot to do something other than starting up normally (e.g. syncing commands to the server).
 * **start():** Calls run() on the underlying Bot object (from the discord.py library)
 
 ## Adding a command

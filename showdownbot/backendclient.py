@@ -43,6 +43,11 @@ class BackendClient():
       raise Exception('Failed to get competition info')
     return response.json()
   
+  def initializeBackend(self):
+    response = self.post('/admin/initializeCompetition', None)
+    if(response.status_code != 200):
+      raise Exception('Failed to initialize backend')
+  
   def changePlayerTeam(self, player, team):
     body = {
       'rsn': player,

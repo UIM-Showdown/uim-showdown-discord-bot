@@ -473,6 +473,24 @@ class ShowdownBot:
       return results
 
     # Register commands
+    @self.bot.tree.command(name='initialize_backend', description='STAFF ONLY: Initialize the backend (will not work if the event is in progress)')
+    async def initialize_backend(interaction: Interaction):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+      now = datetime.now().astimezone()
+      if(now > startDatetime and now < endDatetime):
+        raise errors.UserError('The event is currently in progress')
+      await interaction.response.send_message('Initializing backend...')
+      self.backendClient.initializeBackend()
+      await self.loadCompetitionInfo()
+      if(self.competitionLoaded):
+        await interaction.followup.send('Success: Backend initialized')
+      else:
+        await interaction.followup.send('Failed to reload competition info after initializing backend. The backend might not be running.')
+
     @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')
     async def reload_competition_info(interaction: Interaction):
       await self.adminCheck(interaction)
@@ -488,7 +506,7 @@ class ShowdownBot:
     async def change_player_team(interaction: Interaction, player: str, team: str):
       await self.adminCheck(interaction)
       if(not self.competitionLoaded):
-        await interaction.response.send_message('Competition not loaded')
+        raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Changing player team...')
       self.backendClient.changePlayerTeam(player, team)
       await self.loadCompetitionInfo()
@@ -499,10 +517,10 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
     @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)
-    async def change_player_team(interaction: Interaction, player: str, method: str, adjustment: int):
+    async def set_staff_adjustment(interaction: Interaction, player: str, method: str, adjustment: int):
       await self.adminCheck(interaction)
       if(not self.competitionLoaded):
-        await interaction.response.send_message('Competition not loaded')
+        raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Setting staff adjustment...')
       self.backendClient.setStaffAdjustment(player, method, adjustment)
       await self.loadCompetitionInfo()

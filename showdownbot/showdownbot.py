@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime
 from discord.ext import commands
-from discord import Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
+from discord import utils, Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
 import showdownbot.errors as errors
 import showdownbot.submissions as submissions
 from showdownbot.googlesheetclient import GoogleSheetClient
@@ -59,6 +59,12 @@ class ShowdownBot:
     now = datetime.now().astimezone()
     if(now < startDatetime or now > endDatetime):
       raise errors.BingoUserError('The event is not currently in progress')
+    
+  async def adminCheck(self, interaction):
+    isStaff = False
+    staffRole = utils.find(lambda r: r.name == 'Event staff', self.bot.get_guild(self.guildId).roles)
+    if(staffRole not in interaction.user.roles):
+      raise errors.BingoUserError('This command is only for event staff usage')
     
   '''
   Helper method to raise a BingoUserError if the user that spawned the interaction does not have the Screenshot Approver role (and therefore should not be able to approve/deny submissions)
@@ -348,8 +354,8 @@ class ShowdownBot:
   '''
   Populates instance variables coming from the signup sheet
   '''
-  def loadBingoInfo(self):
-    log.info('Loading bingo info...')
+  def loadCompetitionInfo(self):
+    log.info('Loading competition info...')
     guild = self.bot.get_guild(self.guildId)
     channels = guild.channels
     self.discordUserTeams = {}
@@ -468,6 +474,12 @@ class ShowdownBot:
       return results
 
     # Register commands
+    @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')
+    async def reload_competition_info(interaction: Interaction):
+      await self.adminCheck(interaction)
+      self.loadCompetitionInfo()
+      await interaction.response.send_message('Successfully reloaded competition info')
+
     @self.bot.tree.command(name='submit_monster_killcount', description='Submit a monster killcount for the bingo!')
     @app_commands.autocomplete(monster=monster_autocomplete)
     async def submit_monster_killcount(interaction: Interaction, screenshot: Attachment, monster: str, kc: int):
@@ -826,7 +838,7 @@ class ShowdownBot:
       log.info(f'Logged in as {self.bot.user.name}')
 
       await self.handleAlternateRunCommands(commandLineArgs)
-      self.loadBingoInfo()
+      self.loadCompetitionInfo()
 
       log.info('Startup complete, ready to accept commands!')
   

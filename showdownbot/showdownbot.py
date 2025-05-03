@@ -46,6 +46,7 @@ class ShowdownBot:
     self.teamSubmissionChannels = {}
     self.competitionInfo = {}
     self.players = []
+    self.discordNames = []
     self.teams = []
     self.tiles = []
     self.contributionMethods = []
@@ -143,6 +144,7 @@ class ShowdownBot:
       teamRosters = self.backendClient.getTeamRosters()
       teamInfo = self.backendClient.getTeamInfo()
       self.players = []
+      self.discordNames = []
       self.teams = []
       for teamName in teamRosters:
         self.teams.append(teamName)
@@ -155,10 +157,12 @@ class ShowdownBot:
           self.teamSubmissionChannels[teamName] = None
         for player in teamRosters[teamName]:
           self.players.append(player['rsn'])
+          self.discordNames.append(player['discordName'])
           self.discordUserRSNs[player['discordName']] = player['rsn']
           self.discordUserTeams[player['discordName']] = teamName
 
       self.players.sort()
+      self.discordNames.sort()
       self.teams.sort()
       self.tiles.sort()
       self.contributionMethods.sort()
@@ -175,6 +179,7 @@ class ShowdownBot:
       self.teamSubmissionChannels = {}
       self.competitionInfo = {}
       self.players = []
+      self.discordNames = []
       self.teams = []
       self.tiles = []
       self.contributionMethods = []
@@ -236,7 +241,7 @@ class ShowdownBot:
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = discordName, value = discordName)
-        for discordName in self.discordUserRSNs if current.lower() in discordName.lower()
+        for discordName in self.discordNames if current.lower() in discordName.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -422,6 +427,8 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      if(tile not in self.tiles):
+        raise errors.UserError('Tile not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Reinitializing tile...')
       self.backendClient.reinitializeTile(tile)
       await interaction.followup.send('Success: Tile ' + tile + ' has been reinitialized')
@@ -432,6 +439,10 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      if(player not in self.players):
+        raise errors.UserError('Player not found - Make sure to click the autocomplete option')
+      if(team not in self.teams):
+        raise errors.UserError('Team not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Changing player team...')
       self.backendClient.changePlayerTeam(player, team)
       await self.loadCompetitionInfo()
@@ -443,6 +454,8 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      if(old_rsn not in self.players):
+        raise errors.UserError('Player not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Changing player RSN...')
       self.backendClient.changePlayerRsn(old_rsn, new_rsn)
       await self.loadCompetitionInfo()
@@ -454,6 +467,8 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      if(old_discord_name not in self.discordNames):
+        raise errors.UserError('Player not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Changing player Discord name...')
       self.backendClient.changePlayerDiscordName(old_discord_name, new_discord_name)
       await self.loadCompetitionInfo()
@@ -465,6 +480,8 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      if(player not in self.players):
+        raise errors.UserError('Player not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Setting staff adjustment...')
       self.backendClient.setStaffAdjustment(player, method, adjustment)
       await self.loadCompetitionInfo()

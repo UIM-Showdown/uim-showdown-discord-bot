@@ -433,6 +433,22 @@ class ShowdownBot:
       self.backendClient.reinitializeTile(tile)
       await interaction.followup.send('Success: Tile ' + tile + ' has been reinitialized')
 
+    @self.bot.tree.command(name='add_player', description='STAFF ONLY: Add a player to the competition, and assign the relevant role.')
+    @app_commands.autocomplete(team=team_autocomplete)
+    async def add_player(interaction: Interaction, rsn: str, discord_name: str, team: str):
+      await self.staffCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      guild = self.bot.get_guild(self.guildId)
+      if(not guild.get_member_named(discord_name.lower())):
+        raise errors.UserError('Discord member not found')
+      if(team not in self.teams):
+        raise errors.UserError('Team not found - Make sure to click the autocomplete option')
+      await interaction.response.send_message('Adding player...')
+      self.backendClient.addPlayer(rsn, discord_name, team)
+      await self.loadCompetitionInfo()
+      await interaction.followup.send('Success: Player ' + rsn + ' added on team: ' + team)
+
     @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player. Also handles role changes.')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
     async def change_player_team(interaction: Interaction, player: str, team: str):

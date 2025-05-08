@@ -75,6 +75,16 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to reinitialize tile')
     
+  def addPlayer(self, rsn, discordName, teamName):
+    body = {
+      'rsn': rsn,
+      'discordName': discordName,
+      'teamName': teamName
+    }
+    response = self.post('/admin/addPlayer', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to add player')
+    
   def changePlayerRsn(self, oldRsn, newRsn):
     body = {
       'oldRsn': oldRsn,

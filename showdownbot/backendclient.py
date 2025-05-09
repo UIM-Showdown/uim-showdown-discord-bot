@@ -278,7 +278,7 @@ class BackendClient():
       raise Exception('Failed to submit challenge')
     return response.json()['id']
   
-  def submitRecord(self, rsn, recordNameAndHandicap, value, videoUrl, completedAt, description):
+  def submitRecord(self, rsn, recordNameAndHandicap, value, videoUrl, description):
     recordName = recordNameAndHandicap.split('|')[0]
     handicap = recordNameAndHandicap.split('|')[1]
     if(handicap == 'None'):
@@ -289,7 +289,6 @@ class BackendClient():
       'handicapName': handicap,
       'rawValue': value,
       'videoUrl': videoUrl,
-      'completedAt': completedAt,
       'description': description
     }
     response = self.post('/submissions/record', body)

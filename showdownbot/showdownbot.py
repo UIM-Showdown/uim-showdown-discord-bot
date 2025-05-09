@@ -672,18 +672,16 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
-    @self.bot.tree.command(name='submit_record', description='Submit your record values for the competition! Format for completed_at is "2025-05-30 16:00:00"')
+    @self.bot.tree.command(name='submit_record', description='Submit your record values for the competition!')
     @app_commands.autocomplete(record=record_autocomplete)
-    async def submit_record(interaction: Interaction, video_url: str, value: int, record: str, completed_at: str):
+    async def submit_record(interaction: Interaction, video_url: str, value: int, record: str):
       await self.submissionPreChecks(interaction)
       if(value < 0):
         raise errors.UserError('Value cannot be negative')
-      if(not re.match('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$', completed_at)):
-        raise errors.UserError('Please use the datetime format: "2025-05-30 16:00:00"')
       description = 'Record of {0} XP in {1}'.format(value, record.split('|')[0])
       if(record.split('|')[1] != 'None'):
         description += ' with handicap ' + record.split('|')[1]
-      ids = [self.backendClient.submitRecord(self.discordUserRSNs[interaction.user.name], record, value, video_url, completed_at, description)]
+      ids = [self.backendClient.submitRecord(self.discordUserRSNs[interaction.user.name], record, value, video_url, description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

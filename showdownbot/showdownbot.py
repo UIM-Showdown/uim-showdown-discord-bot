@@ -547,12 +547,16 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_lms', description='Submit your LMS kills for the competition!')
-    async def submit_lms(interaction: Interaction, screenshot: Attachment, kills: int):
+    async def submit_lms(interaction: Interaction, screenshot: Attachment, kills: int, wins: int):
       await self.submissionPreChecks(interaction)
       if(kills < 0):
         raise errors.UserError('Kills cannot be negative')
-      description = f'{kills} kills in LMS'
-      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'LMS: Kills', kills, [screenshot.url], description)]
+      if(wins < 0):
+        raise errors.UserError('Wins cannot be negative')
+      description = f'{kills} kills and {wins} wins in LMS'
+      ids = []
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'LMS: Kills', kills, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'LMS: Wins', wins, [screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

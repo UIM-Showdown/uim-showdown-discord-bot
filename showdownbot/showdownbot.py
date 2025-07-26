@@ -656,6 +656,44 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
+    @self.bot.tree.command(name='submit_doom_of_mokhaiotl', description='Submit your delve completions for the Doom of Mokhaiotl boss!')
+    async def submit_doom_of_mokhaiotl(interaction: Interaction, screenshot: Attachment,
+      delve_1: int,
+      delve_2: int,
+      delve_3: int,
+      delve_4: int,
+      delve_5: int,
+      delve_6: int,
+      delve_7: int,
+      delve_8: int,
+      delve_8_plus: int
+    ):
+      await self.submissionPreChecks(interaction)
+      totalDelves = 0
+      for param in submit_barbarian_assault.parameters:
+        argName = param.name
+        argValue = locals()[argName]
+        if(isinstance(argValue, int) and argValue < 0):
+          raise errors.UserError('Delve completions cannot be negative')
+        if(isinstance(argValue, int)):
+          totalDelves += argValue
+      description = f'{totalDelves} total delves at Doom of Mokhaiotl'
+      ids = []
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 1', delve_1, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 2', delve_2, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 3', delve_3, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 4', delve_4, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 5', delve_5, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 6', delve_6, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 7', delve_7, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 8', delve_8, [screenshot.url], description))
+      ids.append(self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Doom of Mokhaiotl - Delve Level 8+', delve_8_plus, [screenshot.url], description))
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
     @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the competition! (Make sure to have precise timing enabled.)')
     @app_commands.autocomplete(challenge=challenge_autocomplete)
     async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str):

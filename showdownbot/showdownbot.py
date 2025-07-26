@@ -670,7 +670,7 @@ class ShowdownBot:
     ):
       await self.submissionPreChecks(interaction)
       totalDelves = 0
-      for param in submit_barbarian_assault.parameters:
+      for param in submit_doom_of_mokhaiotl.parameters:
         argName = param.name
         argValue = locals()[argName]
         if(isinstance(argValue, int) and argValue < 0):

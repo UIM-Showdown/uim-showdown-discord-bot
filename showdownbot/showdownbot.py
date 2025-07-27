@@ -606,6 +606,20 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
+    @self.bot.tree.command(name='submit_mixology', description='Submit your mixology resin counts for the competition!')
+    async def submit_mixology(interaction: Interaction, screenshot: Attachment, mox_resin: int, aga_resin: int, lye_resin: int):
+      await self.submissionPreChecks(interaction)
+      if(mox_resin < 0 or aga_resin < 0 or lye_resin < 0):
+        raise errors.UserError('Resin counts cannot be negative')
+      totalResin = mox_resin + aga_resin + lye_resin
+      description = f'{totalResin} mixology resin'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Mixology: Resin', totalResin, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
     @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the competition!')
     async def submit_barbarian_assault(interaction: Interaction, clog_screenshot: Attachment, blackboard_screenshot: Attachment,
       high_gambles: int,

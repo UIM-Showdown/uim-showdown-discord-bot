@@ -158,8 +158,8 @@ class ShowdownBot:
         for player in teamRosters[teamName]:
           self.players.append(player['rsn'])
           self.discordNames.append(player['discordName'])
-          self.discordUserRSNs[player['discordName']] = player['rsn']
-          self.discordUserTeams[player['discordName']] = teamName
+          self.discordUserRSNs[player['discordName'].lower()] = player['rsn']
+          self.discordUserTeams[player['discordName'].lower()] = teamName
 
       self.players.sort()
       self.discordNames.sort()

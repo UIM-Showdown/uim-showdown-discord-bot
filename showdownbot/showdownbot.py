@@ -750,6 +750,8 @@ class ShowdownBot:
       await self.submissionPreChecks(interaction)
       if(kc < 0):
         raise errors.UserError('KC cannot be negative')
+      if(kc > 4):
+        raise errors.UserError('If your current KC is 5 or greater, you are already ranked for the boss')
       description = 'Starting KC of {0} for {1}'.format(kc, boss)
       ids = [self.backendClient.submitUnrankedStartingKC(self.discordUserRSNs[interaction.user.name], boss, kc, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)

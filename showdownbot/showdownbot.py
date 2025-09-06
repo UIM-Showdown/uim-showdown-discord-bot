@@ -564,7 +564,7 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_mta', description='Submit your MTA points for the competition!')
-    async def submit_mta(interaction: Interaction, screenshot: Attachment, alchemy_points: int, graveyard_points: int, enchanting_points: int, telekinetic_points: int):
+    async def submit_mta(interaction: Interaction, screenshot: Attachment, telekinetic_points: int, alchemy_points: int, enchanting_points: int, graveyard_points: int):
       await self.submissionPreChecks(interaction)
       if(alchemy_points < 0 or graveyard_points < 0 or enchanting_points < 0 or telekinetic_points < 0):
         raise errors.UserError('Points cannot be negative')

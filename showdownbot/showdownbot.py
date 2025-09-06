@@ -825,7 +825,7 @@ class ShowdownBot:
 
           # Send the approval to the backend
           for id in submission.ids:
-            response = self.backendClient.approveSubmission(id)
+            response = self.backendClient.approveSubmission(id, interaction.user.display_name)
 
           # Delete the submission message and any replies (which could exist because of error messages)
           submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)
@@ -860,7 +860,7 @@ class ShowdownBot:
 
           # Send the denial to the backend
           for id in submission.ids:
-            response = self.backendClient.denySubmission(id)
+            response = self.backendClient.denySubmission(id, interaction.user.display_name)
 
           # Delete the submission message and any replies (which could exist because of error messages)
           submissionQueueChannel = self.bot.get_channel(self.submissionQueueChannelId)

@@ -209,8 +209,11 @@ class BackendClient():
         challenges.append({'nameAndRelayComponent': challenge['name'], 'name': challenge['name'], 'relayComponent': None})
     return challenges
   
-  def approveSubmission(self, id):
-    body = {'state': 'APPROVED'}
+  def approveSubmission(self, id, reviewer):
+    body = {
+      'state': 'APPROVED',
+      'reviewer': reviewer
+    }
     response = self.patch('/submissions/' + str(id), body)
     if(response.status_code == 400):
       raise Exception('Submission has already been approved or denied')
@@ -218,8 +221,11 @@ class BackendClient():
       raise Exception('Failed to approve decision, got status code: ' + str(response.status_code))
     return response.json()
     
-  def denySubmission(self, id):
-    body = {'state': 'DENIED'}
+  def denySubmission(self, id, reviewer):
+    body = {
+      'state': 'DENIED',
+      'reviewer': reviewer
+    }
     response = self.patch('/submissions/' + str(id), body)
     if(response.status_code == 400):
       raise Exception('Submission has already been approved or denied')

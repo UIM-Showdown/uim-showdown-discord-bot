@@ -137,6 +137,10 @@ class ShowdownBot:
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
       self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
+      # Remove methods from the unranked starting value options if the ranking threshold is 1
+      for method in self.unrankedStartingValues:
+        if(method == 'TzKal-Zuk' or 'Clues' in method):
+          self.unrankedStartingValues.remove(method)
       self.clogItems = self.backendClient.getCollectionLogItems()
       self.records = self.backendClient.getRecords()
       self.challenges = self.backendClient.getChallenges()

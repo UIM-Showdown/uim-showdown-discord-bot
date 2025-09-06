@@ -631,7 +631,7 @@ class ShowdownBot:
       defender_level: int,
       collector_level: int,
       healer_level: int,
-      hats: int,
+      all_hats: int,
       torso: int,
       skirt: int,
       gloves: int,
@@ -657,7 +657,7 @@ class ShowdownBot:
           points += 400
         if(level > 4):
           points += 500
-      points += hats * 275 * 4
+      points += all_hats * 275 * 4
       points += torso * 375 * 4
       points += skirt * 375 * 4
       points += gloves * 150 * 4

@@ -69,6 +69,6 @@ class Submission():
     for paramName in self.params:
       submissionText += '\n' + paramName + ': ' + self.params[paramName]
     if('Record of' in self.shortDesc):
-      submissionText += '\n' + f'Temple link to verify record: https://templeosrs.com/player/overview.php?player={self.rsn.lower()}&skill={self.params['record'].split('|')[0].title()}'
+      submissionText += '\n' + f'Temple link to verify record: https://templeosrs.com/player/overview.php?player={self.rsn.lower().replace(' ', '+')}&skill={self.params['record'].split('|')[0].title()}'
     submissionText += '\n' + 'Submission json: `' + toJson(self) + '`'
     return submissionText

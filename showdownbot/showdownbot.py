@@ -1,9 +1,9 @@
 import logging
 import os
-import re
 from datetime import datetime
 from discord.ext import commands
 from discord import utils, Intents, ui, app_commands, Interaction, Attachment, Colour, CategoryChannel, TextChannel, VoiceChannel, PermissionOverwrite, InteractionType, ButtonStyle
+from typing import Optional
 import showdownbot.errors as errors
 import showdownbot.submissions as submissions
 from showdownbot.backendclient import BackendClient
@@ -323,13 +323,25 @@ class ShowdownBot:
         results = results[:25]
       return results
     
-    async def challenge_autocomplete(
+    async def team_speedrun_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = challenge['name'], value = challenge['name'])
+        for challenge in self.challenges if current.lower() in challenge['name'].lower() and challenge['relayComponent'] is None
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def relay_autocomplete(
       interaction: Interaction,
       current: str
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = challenge['nameAndRelayComponent'], value = challenge['name'] + '|' + str(challenge['relayComponent']))
-        for challenge in self.challenges if current.lower() in challenge['nameAndRelayComponent'].lower()
+        for challenge in self.challenges if current.lower() in challenge['nameAndRelayComponent'].lower() and challenge['relayComponent'] is not None
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -711,10 +723,38 @@ class ShowdownBot:
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
+    
+    @self.bot.tree.command(name='submit_team_speedrun', description='Submit your team speedruns for the competition! (Make sure to have precise timing enabled.)')
+    @app_commands.autocomplete(challenge=team_speedrun_autocomplete, rsn_1=player_autocomplete, rsn_2=player_autocomplete, rsn_3=player_autocomplete, rsn_4=player_autocomplete, rsn_5=player_autocomplete)
+    async def submit_team_speedrun(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str, rsn_1: str, rsn_2: Optional[str], rsn_3: Optional[str], rsn_4: Optional[str], rsn_5: Optional[str]):
+      await self.submissionPreChecks(interaction)
+      if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
+        raise errors.UserError('Times cannot be negative')
+      if(tenths_of_seconds > 9):
+        raise errors.UserError('tenths_of_seconds cannot be greater than 9')
+      finalSeconds = (minutes * 60) + seconds + (tenths_of_seconds * 0.1)
+      challengeName = challenge.split('|')[0]
+      if(challenge.split('|')[1] != 'None'):
+        challengeName += ' - ' + challenge.split('|')[1]
+      description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challengeName, minutes, seconds, tenths_of_seconds)
+      ids = [self.backendClient.submitChallenge(rsn_1, challenge, finalSeconds, [screenshot.url], description)]
+      if(rsn_2 is not None):
+        ids.append(self.backendClient.submitChallenge(rsn_2, challenge, finalSeconds, [screenshot.url], description))
+      if(rsn_3 is not None):
+        ids.append(self.backendClient.submitChallenge(rsn_3, challenge, finalSeconds, [screenshot.url], description))
+      if(rsn_4 is not None):
+        ids.append(self.backendClient.submitChallenge(rsn_4, challenge, finalSeconds, [screenshot.url], description))
+      if(rsn_5 is not None):
+        ids.append(self.backendClient.submitChallenge(rsn_5, challenge, finalSeconds, [screenshot.url], description))
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
 
-    @self.bot.tree.command(name='submit_challenge', description='Submit your challenge times for the competition! (Make sure to have precise timing enabled.)')
-    @app_commands.autocomplete(challenge=challenge_autocomplete)
-    async def submit_challenge(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str):
+    @self.bot.tree.command(name='submit_relay_time', description='Submit your relay times for the competition! (Make sure to have precise timing enabled.)')
+    @app_commands.autocomplete(challenge=relay_autocomplete)
+    async def submit_relay_time(interaction: Interaction, screenshot: Attachment, minutes: int, seconds: int, tenths_of_seconds: int, challenge: str):
       await self.submissionPreChecks(interaction)
       if(minutes < 0 or seconds < 0 or tenths_of_seconds < 0):
         raise errors.UserError('Times cannot be negative')

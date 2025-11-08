@@ -622,6 +622,32 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
+    @self.bot.tree.command(name='submit_nex_nihil_shards', description='Submit your nihil shards from Nex for the competition!')
+    async def submit_nex_nihil_shards(interaction: Interaction, screenshot: Attachment, shards: int):
+      await self.submissionPreChecks(interaction)
+      if(shards < 0):
+        raise errors.UserError('Shards cannot be negative')
+      description = f'{shards} nihil shards'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Nex: Nihil Shards', shards, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_revenant_ether', description='Submit your revenant ether for the competition!')
+    async def submit_revenant_ether(interaction: Interaction, screenshot: Attachment, ether: int):
+      await self.submissionPreChecks(interaction)
+      if(ether < 0):
+        raise errors.UserError('Ether cannot be negative')
+      description = f'{ether} revenant ether'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Revenants: Ether', ether, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
     @self.bot.tree.command(name='submit_mixology', description='Submit your mixology resin counts for the competition!')
     async def submit_mixology(interaction: Interaction, screenshot: Attachment, mox_resin: int, aga_resin: int, lye_resin: int):
       await self.submissionPreChecks(interaction)
@@ -804,14 +830,12 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
-    @self.bot.tree.command(name='submit_item_drops', description='Submit the number of item drops you have! (Make sure to submit the TOTAL NUMBER from your log.)')
+    @self.bot.tree.command(name='submit_item_drops', description='Submit an item drop from an activity!')
     @app_commands.autocomplete(method=item_drop_autocomplete)
-    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, method: str, num_drops: int):
+    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, method: str):
       await self.submissionPreChecks(interaction)
-      if(num_drops < 0):
-        raise errors.UserError('KC cannot be negative')
-      description = '{0} drops from {1}'.format(num_drops, method)
-      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], method, num_drops, [screenshot.url], description)]
+      description = 'Item drop from {0}'.format(method)
+      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, method, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

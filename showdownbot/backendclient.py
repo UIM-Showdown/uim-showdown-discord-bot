@@ -267,6 +267,19 @@ class BackendClient():
       raise Exception('Failed to submit contribution increment')
     return response.json()['id']
   
+  def submitContributionPurchase(self, rsn, method, amount, urls, description):
+    body = {
+      'rsn': rsn,
+      'methodName': method,
+      'amount': amount,
+      'screenshotURLs': urls,
+      'description': description
+    }
+    response = self.post('/submissions/contribution/purchase', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to submit contribution purchase')
+    return response.json()['id']
+  
   def submitCollectionLogItem(self, rsn, item, urls, description):
     body = {
       'rsn': rsn,

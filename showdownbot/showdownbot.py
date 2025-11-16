@@ -134,6 +134,19 @@ class ShowdownBot:
       self.competitionInfo = self.backendClient.getCompetitionInfo()
       self.tiles = self.backendClient.getTiles()
       self.contributionMethods = self.backendClient.getContributionMethods()
+      # Create purchase options
+      self.purchaseItems = []
+      for method in self.contributionMethods:
+        for item in method['purchaseItems']:
+          self.purchaseItems.append({
+            'name': item['name'],
+            'cost': item['cost'],
+            'methodName': method['name']
+          })
+      self.purchaseItemNames = []
+      for item in self.purchaseItems:
+        if(item['name'] not in self.purchaseItemNames):
+          self.purchaseItemNames.append(item['name'])
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
       self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
@@ -174,6 +187,7 @@ class ShowdownBot:
       self.itemDrops.sort()
       self.unrankedStartingValues.sort()
       self.clogItems.sort()
+      self.purchaseItemNames.sort()
 
       self.competitionLoaded = True
       log.info('Competition info loaded!')
@@ -282,6 +296,18 @@ class ShowdownBot:
       results = [
         app_commands.Choice(name = drop, value = drop)
         for drop in self.itemDrops if current.lower() in drop.lower()
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def purchase_item_autocomplete(
+        interaction: Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = itemName, value = itemName)
+        for itemName in self.purchaseItemNames if current.lower() in itemName.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -663,21 +689,11 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the competition!')
-    async def submit_barbarian_assault(interaction: Interaction, clog_screenshot: Attachment, blackboard_screenshot: Attachment,
-      high_gambles: int,
+    async def submit_barbarian_assault(interaction: Interaction, screenshot: Attachment,
       attacker_points: int,
       defender_points: int,
       collector_points: int,
       healer_points: int,
-      attacker_level: int,
-      defender_level: int,
-      collector_level: int,
-      healer_level: int,
-      all_hats: int,
-      torso: int,
-      skirt: int,
-      gloves: int,
-      boots: int
     ):
       await self.submissionPreChecks(interaction)
       for param in submit_barbarian_assault.parameters:
@@ -685,27 +701,9 @@ class ShowdownBot:
         argValue = locals()[argName]
         if(isinstance(argValue, int) and argValue < 0):
           raise errors.UserError('BA arguments cannot be negative')
-        if('level' in argName and (argValue < 1 or argValue > 5)):
-          raise errors.UserError('BA levels must be 1-5')
-      points = 0
-      points += high_gambles * 500
       points += attacker_points + defender_points + collector_points + healer_points
-      for level in [attacker_level, defender_level, collector_level, healer_level]:
-        if(level > 1):
-          points += 200
-        if(level > 2):
-          points += 300
-        if(level > 3):
-          points += 400
-        if(level > 4):
-          points += 500
-      points += all_hats * 275 * 4
-      points += torso * 375 * 4
-      points += skirt * 375 * 4
-      points += gloves * 150 * 4
-      points += boots * 100 * 4
       description = f'{points} BA points'
-      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [clog_screenshot.url, blackboard_screenshot.url], description)]
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
@@ -831,11 +829,29 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_item_drops', description='Submit an item drop from an activity!')
-    @app_commands.autocomplete(method=item_drop_autocomplete)
-    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, method: str):
+    @app_commands.autocomplete(itemType=item_drop_autocomplete)
+    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, itemType: str):
       await self.submissionPreChecks(interaction)
-      description = 'Item drop from {0}'.format(method)
-      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, method, [screenshot.url], description)]
+      description = 'Item drop for {0}'.format(itemType)
+      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, itemType, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_minigame_purchase', description='Submit an item purchase for a minigame!')
+    @app_commands.autocomplete(itemName=purchase_item_autocomplete)
+    async def submit_item_drops(interaction: Interaction, before_screenshot: Attachment, after_screenshot: Attachment, item_name: str, quantity: int):
+      await self.submissionPreChecks(interaction)
+      if(quantity < 1):
+        raise errors.UserError('Quantity cannot be 0 or negative')
+      description = 'Purchase of {0} {1}'.format(quantity, item_name)
+      ids = []
+      for item in self.purchaseItems:
+        if(item['name'] == item_name):
+          totalCost = quantity * item['cost']
+          ids.append(self.backendClient.submitContributionPurchase(self.discordUserRSNs[interaction.user.name], totalCost, item['methodName'], [before_screenshot.url, after_screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

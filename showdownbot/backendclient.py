@@ -327,16 +327,3 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to submit record')
     return response.json()['id']
-  
-  def submitUnrankedStartingKC(self, rsn, method, value, urls, description):
-    body = {
-      'rsn': rsn,
-      'methodName': method,
-      'value': value,
-      'screenshotURLs': urls,
-      'description': description
-    }
-    response = self.post('/submissions/unrankedstartingvalue', body)
-    if(response.status_code != 200):
-      raise Exception('Failed to submit unranked starting KC')
-    return response.json()['id']

@@ -52,7 +52,6 @@ class ShowdownBot:
     self.contributionMethods = []
     self.monsters = []
     self.itemDrops = []
-    self.unrankedStartingValues = []
     self.clogItems = []
     self.records = []
     self.challenges = []
@@ -149,11 +148,6 @@ class ShowdownBot:
           self.purchaseItemNames.append(item['name'])
       self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
       self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
-      self.unrankedStartingValues = self.backendClient.getContributionMethodsByType('TEMPLE_KC')
-      # Remove methods from the unranked starting value options if the ranking threshold is 1
-      for method in self.unrankedStartingValues:
-        if(method == 'TzKal-Zuk' or 'Clues' in method):
-          self.unrankedStartingValues.remove(method)
       self.clogItems = self.backendClient.getCollectionLogItems()
       self.records = self.backendClient.getRecords()
       self.challenges = self.backendClient.getChallenges()
@@ -185,7 +179,6 @@ class ShowdownBot:
       self.contributionMethods.sort()
       self.monsters.sort()
       self.itemDrops.sort()
-      self.unrankedStartingValues.sort()
       self.clogItems.sort()
       self.purchaseItemNames.sort()
 
@@ -203,7 +196,6 @@ class ShowdownBot:
       self.contributionMethods = []
       self.monsters = []
       self.itemDrops = []
-      self.unrankedStartingValues = []
       self.clogItems = []
       self.records = []
       self.challenges = []
@@ -308,18 +300,6 @@ class ShowdownBot:
       results = [
         app_commands.Choice(name = itemName, value = itemName)
         for itemName in self.purchaseItemNames if current.lower() in itemName.lower()
-      ]
-      if(len(results) > 25):
-        results = results[:25]
-      return results
-    
-    async def unranked_starting_value_autocomplete(
-      interaction: Interaction,
-      current: str
-    ) -> list[app_commands.Choice[str]]:
-      results = [
-        app_commands.Choice(name = value, value = value)
-        for value in self.unrankedStartingValues if current.lower() in value.lower()
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -806,22 +786,6 @@ class ShowdownBot:
       if(record.split('|')[1] != 'None'):
         description += ' with handicap ' + record.split('|')[1]
       ids = [self.backendClient.submitRecord(self.discordUserRSNs[interaction.user.name], record, value, video_url, description)]
-      submission = submissions.Submission(self, interaction, ids, description)
-      await self.sendSubmissionToQueue(submission)
-      responseText = '# Submission received:\n'
-      responseText += str(submission)
-      await interaction.response.send_message(responseText)
-
-    @self.bot.tree.command(name='submit_unranked_starting_kc', description='Submit your real starting KC if you are unranked in a boss!')
-    @app_commands.autocomplete(boss=unranked_starting_value_autocomplete)
-    async def submit_unranked_starting_kc(interaction: Interaction, screenshot: Attachment, boss: str, kc: int):
-      await self.submissionPreChecks(interaction)
-      if(kc < 0):
-        raise errors.UserError('KC cannot be negative')
-      if(kc > 4):
-        raise errors.UserError('If your current KC is 5 or greater, you are already ranked for the boss')
-      description = 'Starting KC of {0} for {1}'.format(kc, boss)
-      ids = [self.backendClient.submitUnrankedStartingKC(self.discordUserRSNs[interaction.user.name], boss, kc, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

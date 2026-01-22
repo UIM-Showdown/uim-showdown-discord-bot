@@ -133,6 +133,9 @@ class ShowdownBot:
       self.competitionInfo = self.backendClient.getCompetitionInfo()
       self.tiles = self.backendClient.getTiles()
       self.contributionMethods = self.backendClient.getContributionMethods()
+      self.contributionMethodNames = []
+      for method in self.contributionMethods:
+        self.contributionMethodNames.append(method['name'])
       # Create purchase options
       self.purchaseItems = []
       for method in self.contributionMethods:
@@ -176,7 +179,7 @@ class ShowdownBot:
       self.discordNames.sort()
       self.teams.sort()
       self.tiles.sort()
-      self.contributionMethods.sort()
+      self.contributionMethodNames.sort()
       self.monsters.sort()
       self.itemDrops.sort()
       self.clogItems.sort()
@@ -263,7 +266,7 @@ class ShowdownBot:
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = method, value = method)
-        for method in self.contributionMethods if current.lower() in method.lower()
+        for method in self.contributionMethodNames if current.lower() in method.lower()
       ]
       if(len(results) > 25):
         results = results[:25]

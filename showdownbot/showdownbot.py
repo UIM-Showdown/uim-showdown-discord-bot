@@ -799,7 +799,7 @@ class ShowdownBot:
     @app_commands.autocomplete(item_type=item_drop_autocomplete)
     async def submit_item_drops(interaction: Interaction, screenshot: Attachment, item_type: str):
       await self.submissionPreChecks(interaction)
-      description = 'Item drop for {0}'.format(itemType)
+      description = 'Item drop for {0}'.format(item_type)
       ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, item_type, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)

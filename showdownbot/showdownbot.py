@@ -793,11 +793,11 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_item_drops', description='Submit an item drop from an activity!')
-    @app_commands.autocomplete(itemType=item_drop_autocomplete)
-    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, itemType: str):
+    @app_commands.autocomplete(item_type=item_drop_autocomplete)
+    async def submit_item_drops(interaction: Interaction, screenshot: Attachment, item_type: str):
       await self.submissionPreChecks(interaction)
       description = 'Item drop for {0}'.format(itemType)
-      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, itemType, [screenshot.url], description)]
+      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, item_type, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
@@ -805,7 +805,7 @@ class ShowdownBot:
       await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_minigame_purchase', description='Submit an item purchase for a minigame!')
-    @app_commands.autocomplete(itemName=purchase_item_autocomplete)
+    @app_commands.autocomplete(item_name=purchase_item_autocomplete)
     async def submit_item_drops(interaction: Interaction, before_screenshot: Attachment, after_screenshot: Attachment, item_name: str, quantity: int):
       await self.submissionPreChecks(interaction)
       if(quantity < 1):

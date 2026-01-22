@@ -161,7 +161,7 @@ class BackendClient():
       methods.append(method)
     return methods
   
-  def getContributionMethodsByType(self, type):
+  def getContributionMethodNamesByType(self, type):
     methods = []
     response = self.get('/contributionMethods')
     if(response.status_code != 200):

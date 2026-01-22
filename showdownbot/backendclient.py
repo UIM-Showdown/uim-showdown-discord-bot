@@ -190,10 +190,10 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to get records')
     for record in response.json():
-      records.append({'nameAndHandicap': record['skill'].title(), 'name': record['skill'].title(), 'handicap': None})
+      records.append({'nameAndHandicap': record['name'].title(), 'name': record['name'].title(), 'handicap': None})
       if(len(record['handicaps']) > 0):
         for handicap in record['handicaps']:
-          records.append({'nameAndHandicap': record['skill'].title() + ' - ' + handicap['name'], 'name': record['skill'].title(), 'handicap': handicap['name']})
+          records.append({'nameAndHandicap': record['name'].title() + ' - ' + handicap['name'], 'name': record['name'].title(), 'handicap': handicap['name']})
     return records
   
   def getChallenges(self):

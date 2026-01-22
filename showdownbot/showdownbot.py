@@ -146,8 +146,8 @@ class ShowdownBot:
       for item in self.purchaseItems:
         if(item['name'] not in self.purchaseItemNames):
           self.purchaseItemNames.append(item['name'])
-      self.monsters = self.backendClient.getContributionMethodsByType('SUBMISSION_KC')
-      self.itemDrops = self.backendClient.getContributionMethodsByType('SUBMISSION_ITEM_DROP')
+      self.monsters = self.backendClient.getContributionMethodNamesByType('SUBMISSION_KC')
+      self.itemDrops = self.backendClient.getContributionMethodNamesByType('SUBMISSION_ITEM_DROP')
       self.clogItems = self.backendClient.getCollectionLogItems()
       self.records = self.backendClient.getRecords()
       self.challenges = self.backendClient.getChallenges()

@@ -158,7 +158,7 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to get contribution methods')
     for method in response.json():
-      methods.append(method['name'])
+      methods.append(method)
     return methods
   
   def getContributionMethodsByType(self, type):

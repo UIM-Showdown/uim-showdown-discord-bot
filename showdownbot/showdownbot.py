@@ -656,6 +656,19 @@ class ShowdownBot:
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
+    
+    @self.bot.tree.command(name='submit_hueycoatl_hides', description='Submit your Hueycoatl hides for the competition!')
+    async def submit_hueycoatl_hides(interaction: Interaction, screenshot: Attachment, hides: int):
+      await self.submissionPreChecks(interaction)
+      if(hides < 0):
+        raise errors.UserError('Hides cannot be negative')
+      description = f'{hides} Hueycoatl hides'
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Hueycoatl: Hides', hides, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_mixology', description='Submit your mixology resin counts for the competition!')
     async def submit_mixology(interaction: Interaction, screenshot: Attachment, mox_resin: int, aga_resin: int, lye_resin: int):
@@ -684,7 +697,7 @@ class ShowdownBot:
         argValue = locals()[argName]
         if(isinstance(argValue, int) and argValue < 0):
           raise errors.UserError('BA arguments cannot be negative')
-      points += attacker_points + defender_points + collector_points + healer_points
+      points = attacker_points + defender_points + collector_points + healer_points
       description = f'{points} BA points'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
@@ -740,10 +753,7 @@ class ShowdownBot:
       if(tenths_of_seconds > 9):
         raise errors.UserError('tenths_of_seconds cannot be greater than 9')
       finalSeconds = (minutes * 60) + seconds + (tenths_of_seconds * 0.1)
-      challengeName = challenge.split('|')[0]
-      if(challenge.split('|')[1] != 'None'):
-        challengeName += ' - ' + challenge.split('|')[1]
-      description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challengeName, minutes, seconds, tenths_of_seconds)
+      description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challenge, minutes, seconds, tenths_of_seconds)
       ids = [self.backendClient.submitChallenge(rsn_1, challenge, finalSeconds, [screenshot.url], description)]
       if(rsn_2 is not None):
         ids.append(self.backendClient.submitChallenge(rsn_2, challenge, finalSeconds, [screenshot.url], description))
@@ -800,7 +810,7 @@ class ShowdownBot:
     async def submit_item_drops(interaction: Interaction, screenshot: Attachment, item_type: str):
       await self.submissionPreChecks(interaction)
       description = 'Item drop for {0}'.format(item_type)
-      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], 1, item_type, [screenshot.url], description)]
+      ids = [self.backendClient.submitContributionIncrement(self.discordUserRSNs[interaction.user.name], item_type, 1, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
@@ -818,7 +828,7 @@ class ShowdownBot:
       for item in self.purchaseItems:
         if(item['name'] == item_name):
           totalCost = quantity * item['cost']
-          ids.append(self.backendClient.submitContributionPurchase(self.discordUserRSNs[interaction.user.name], totalCost, item['methodName'], [before_screenshot.url, after_screenshot.url], description))
+          ids.append(self.backendClient.submitContributionPurchase(self.discordUserRSNs[interaction.user.name], item['methodName'], totalCost, [before_screenshot.url, after_screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

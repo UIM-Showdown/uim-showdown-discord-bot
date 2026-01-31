@@ -294,7 +294,9 @@ class BackendClient():
   
   def submitChallenge(self, rsn, challengeNameAndRelayComponent, seconds, urls, description):
     challengeName = challengeNameAndRelayComponent.split('|')[0]
-    relayComponentName = challengeNameAndRelayComponent.split('|')[1]
+    relayComponentName = None
+    if('|' in challengeNameAndRelayComponent):
+      relayComponentName = challengeNameAndRelayComponent.split('|')[1]
     if(relayComponentName == 'None'):
       relayComponentName = None
     body = {

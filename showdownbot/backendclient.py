@@ -317,7 +317,7 @@ class BackendClient():
       handicap = None
     body = {
       'rsn': rsn,
-      'skill': recordName.upper(),
+      'recordName': recordName.upper(),
       'handicapName': handicap,
       'rawValue': value,
       'videoUrl': videoUrl,

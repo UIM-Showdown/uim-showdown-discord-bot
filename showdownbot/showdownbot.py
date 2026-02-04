@@ -58,15 +58,21 @@ class ShowdownBot:
     self.competitionLoaded = False
 
   '''
+  Helper method to check if the event is currently in progress
+  '''
+  def eventInProgress():
+    now = datetime.now().astimezone()
+    startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+    endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+    return now > startDatetime and now < endDatetime
+
+  '''
   Helper method to make sure the person submitting the command is a competitor and is in the right channel
   '''
   async def submissionPreChecks(self, interaction):
     if(not self.competitionLoaded):
       raise errors.UserError('The event is not currently in progress')
-    startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
-    endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
-    now = datetime.now().astimezone()
-    if(now < startDatetime or now > endDatetime):
+    if(not self.eventInProgress()):
       raise errors.UserError('The event is not currently in progress')
     if(interaction.user.name not in self.discordUserRSNs):
       raise errors.UserError(f'{interaction.user.display_name} is not a registered player in this event')
@@ -362,10 +368,7 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
-      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
-      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
-      now = datetime.now().astimezone()
-      if(now > startDatetime and now < endDatetime):
+      if(self.eventInProgress()):
         raise errors.UserError('The event is currently in progress')
       await interaction.response.send_message('Initializing backend...')
       self.backendClient.initializeBackend()
@@ -395,10 +398,7 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
-      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
-      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
-      now = datetime.now().astimezone()
-      if(now > startDatetime and now < endDatetime):
+      if(self.eventInProgress()):
         raise errors.UserError('The event is currently in progress')
       await interaction.response.send_message('Setting up Discord server...')
       response = self.backendClient.setupDiscordServer()
@@ -418,10 +418,7 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
-      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
-      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
-      now = datetime.now().astimezone()
-      if(now > startDatetime and now < endDatetime):
+      if(self.eventInProgress()):
         raise errors.UserError('The event is currently in progress')
       await interaction.response.send_message('Tearing down Discord server...')
       self.backendClient.teardownDiscordServer()
@@ -432,11 +429,8 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
-      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
-      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
-      now = datetime.now().astimezone()
-      if(not force and (now < startDatetime or now > endDatetime)):
-        raise errors.UserError('The event is currently in progress')
+      if(not force and not self.eventInProgress()):
+        raise errors.UserError('The event is not currently in progress')
       await interaction.response.send_message('Updating backend...')
       self.backendClient.updateBackend(force)
       await interaction.followup.send('Success: Backend updated')

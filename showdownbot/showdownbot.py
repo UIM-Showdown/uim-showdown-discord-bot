@@ -428,12 +428,12 @@ class ShowdownBot:
       await interaction.followup.send('Success: Team roles/channels deleted; Competitor/Captain roles de-assigned.')
 
     @self.bot.tree.command(name='update_backend', description='STAFF ONLY: Update the backend (This happens automatically every 60 seconds)')
-    async def update_backend(interaction: Interaction):
+    async def update_backend(interaction: Interaction, force: Optional[bool] = False):
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Updating backend...')
-      self.backendClient.updateBackend()
+      self.backendClient.updateBackend(force)
       await interaction.followup.send('Success: Backend updated')
 
     @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')

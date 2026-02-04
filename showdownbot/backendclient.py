@@ -65,8 +65,11 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to teardown Discord server')
     
-  def updateBackend(self):
-    response = self.post('/admin/updateCompetition', None)
+  def updateBackend(self, force):
+    uri = '/admin/updateCompetition'
+    if(force):
+      uri += '?force=true'
+    response = self.post(uri, None)
     if(response.status_code != 200):
       raise Exception('Failed to update backend')
     

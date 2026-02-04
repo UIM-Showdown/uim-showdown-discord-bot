@@ -432,6 +432,11 @@ class ShowdownBot:
       await self.staffCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
+      startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
+      endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])
+      now = datetime.now().astimezone()
+      if(not force and (now < startDatetime or now > endDatetime)):
+        raise errors.UserError('The event is currently in progress')
       await interaction.response.send_message('Updating backend...')
       self.backendClient.updateBackend(force)
       await interaction.followup.send('Success: Backend updated')

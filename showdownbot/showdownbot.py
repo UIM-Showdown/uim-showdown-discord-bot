@@ -60,7 +60,7 @@ class ShowdownBot:
   '''
   Helper method to check if the event is currently in progress
   '''
-  def eventInProgress():
+  def eventInProgress(self):
     now = datetime.now().astimezone()
     startDatetime = datetime.fromisoformat(self.competitionInfo['startDatetime'])
     endDatetime = datetime.fromisoformat(self.competitionInfo['endDatetime'])

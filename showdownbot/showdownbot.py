@@ -563,7 +563,7 @@ class ShowdownBot:
       if(total_games < 0):
         raise errors.UserError('Total games cannot be negative')
       description = f'{total_games} games of pest control'
-      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Pest Control Games', total_games, [screenshot.url], description)]
+      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Pest Control: Games', total_games, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

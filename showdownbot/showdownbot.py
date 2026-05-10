@@ -556,11 +556,12 @@ class ShowdownBot:
       responseText += str(submission)
       await interaction.response.send_message(responseText)
 
-    @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the competition! (All difficulties added together)')
-    async def submit_pest_control(interaction: Interaction, screenshot: Attachment, total_games: int):
+    @self.bot.tree.command(name='submit_pest_control', description='Submit your pest control games for the competition!')
+    async def submit_pest_control(interaction: Interaction, screenshot: Attachment, novice_games: int, intermediate_games: int, veteran_games: int):
       await self.submissionPreChecks(interaction)
-      if(total_games < 0):
-        raise errors.UserError('Total games cannot be negative')
+      if(novice_games < 0 or intermediate_games < 0 or veteran_games < 0):
+        raise errors.UserError('Number of PC games cannot be negative')
+      total_games = novice_games + intermediate_games + veteran_games
       description = f'{total_games} games of pest control'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Pest Control: Games', total_games, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)

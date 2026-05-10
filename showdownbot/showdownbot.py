@@ -684,6 +684,10 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='submit_barbarian_assault', description='Submit your BA points for the competition!')
     async def submit_barbarian_assault(interaction: Interaction, screenshot: Attachment,
+      attacker_level: int,
+      defender_level: int,
+      collector_level: int,
+      healer_level: int,
       attacker_points: int,
       defender_points: int,
       collector_points: int,
@@ -695,7 +699,18 @@ class ShowdownBot:
         argValue = locals()[argName]
         if(isinstance(argValue, int) and argValue < 0):
           raise errors.UserError('BA arguments cannot be negative')
+        if("level" in argName and (argValue < 1 or argValue > 5)):
+          raise errors.UserError('BA levels must be between 1 and 5')
       points = attacker_points + defender_points + collector_points + healer_points
+      for level in [attacker_level, defender_level, collector_level, healer_level]:
+        if(level > 1):
+          points += 200
+        if(level > 2):
+          points += 300
+        if(level > 3):
+          points += 400
+        if(level > 4):
+          points += 500
       description = f'{points} BA points'
       ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Barbarian Assault Points', points, [screenshot.url], description)]
       submission = submissions.Submission(self, interaction, ids, description)

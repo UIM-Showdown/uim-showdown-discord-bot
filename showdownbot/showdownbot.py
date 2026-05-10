@@ -81,11 +81,10 @@ class ShowdownBot:
     if(teamChannel is None or interaction.channel != teamChannel):
       raise errors.UserError("Please only submit commands in your team's bot submission channel")
     
-  async def staffCheck(self, interaction):
-    isStaff = False
-    staffRole = utils.find(lambda r: r.name == 'Event staff', self.bot.get_guild(self.guildId).roles)
+  async def adminCheck(self, interaction):
+    staffRole = utils.find(lambda r: r.name == 'Event staff' or r.name == 'Technical Lead', self.bot.get_guild(self.guildId).roles)
     if(staffRole not in interaction.user.roles):
-      raise errors.UserError('This command is only for event staff usage')
+      raise errors.UserError('This command is only for event staff or technical lead usage')
     
   '''
   Helper method to raise a UserError if the user that spawned the interaction does not have the Screenshot Approver role (and therefore should not be able to approve/deny submissions)
@@ -363,9 +362,9 @@ class ShowdownBot:
       return results
 
     # Register commands
-    @self.bot.tree.command(name='initialize_backend', description='STAFF ONLY: Initialize the backend (will not work if the event is in progress)')
+    @self.bot.tree.command(name='initialize_backend', description='ADMIN ONLY: Initialize the backend (will not work if the event is in progress)')
     async def initialize_backend(interaction: Interaction):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(self.eventInProgress()):
@@ -375,9 +374,9 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Backend initialized')
 
-    @self.bot.tree.command(name='update_competitor_role', description='STAFF ONLY: Update the Competitor role (This happens automatically every 60 minutes)')
+    @self.bot.tree.command(name='update_competitor_role', description='ADMIN ONLY: Update the Competitor role (This happens automatically every 60 minutes)')
     async def update_competitor_role(interaction: Interaction):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       await interaction.response.send_message('Updating competitor role...')
@@ -393,9 +392,9 @@ class ShowdownBot:
         message = message[:-1]
         await interaction.followup.send(message)
 
-    @self.bot.tree.command(name='setup_discord_server', description='STAFF ONLY: Create team channels and create/assign team roles')
+    @self.bot.tree.command(name='setup_discord_server', description='ADMIN ONLY: Create team channels and create/assign team roles')
     async def setup_discord_server(interaction: Interaction):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(self.eventInProgress()):
@@ -413,9 +412,9 @@ class ShowdownBot:
         message = message[:-1]
         await interaction.followup.send(message)
 
-    @self.bot.tree.command(name='teardown_discord_server', description='STAFF ONLY: Delete team channels/roles and de-assign Competitor/Captain roles')
+    @self.bot.tree.command(name='teardown_discord_server', description='ADMIN ONLY: Delete team channels/roles and de-assign Competitor/Captain roles')
     async def teardown_discord_server(interaction: Interaction):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(self.eventInProgress()):
@@ -424,9 +423,9 @@ class ShowdownBot:
       self.backendClient.teardownDiscordServer()
       await interaction.followup.send('Success: Team roles/channels deleted; Competitor/Captain roles de-assigned.')
 
-    @self.bot.tree.command(name='update_backend', description='STAFF ONLY: Update the backend (This happens automatically every 60 seconds)')
+    @self.bot.tree.command(name='update_backend', description='ADMIN ONLY: Update the backend (This happens automatically every 60 seconds)')
     async def update_backend(interaction: Interaction, force: Optional[bool] = False):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(not force and not self.eventInProgress()):
@@ -435,9 +434,9 @@ class ShowdownBot:
       self.backendClient.updateBackend(force)
       await interaction.followup.send('Success: Backend updated')
 
-    @self.bot.tree.command(name='reload_competition_info', description='STAFF ONLY: Reload competition info from the backend')
+    @self.bot.tree.command(name='reload_competition_info', description='ADMIN ONLY: Reload competition info from the backend')
     async def reload_competition_info(interaction: Interaction):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       await interaction.response.send_message('Reloading competition info...')
       await self.loadCompetitionInfo()
       if(self.competitionLoaded):
@@ -445,10 +444,10 @@ class ShowdownBot:
       else:
         await interaction.followup.send('Failed to reload competition info. The backend might not be running.')
 
-    @self.bot.tree.command(name='reinitialize_tile', description='STAFF ONLY: Reinitialize a tile in the backend')
+    @self.bot.tree.command(name='reinitialize_tile', description='ADMIN ONLY: Reinitialize a tile in the backend')
     @app_commands.autocomplete(tile=tile_autocomplete)
     async def reinitialize_tile(interaction: Interaction, tile: str):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(tile not in self.tiles):
@@ -457,10 +456,10 @@ class ShowdownBot:
       self.backendClient.reinitializeTile(tile)
       await interaction.followup.send('Success: Tile ' + tile + ' has been reinitialized')
 
-    @self.bot.tree.command(name='add_player', description='STAFF ONLY: Add a player to the competition, and assign the relevant role.')
+    @self.bot.tree.command(name='add_player', description='ADMIN ONLY: Add a player to the competition, and assign the relevant role.')
     @app_commands.autocomplete(team=team_autocomplete)
     async def add_player(interaction: Interaction, rsn: str, discord_name: str, team: str):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       guild = self.bot.get_guild(self.guildId)
@@ -473,10 +472,10 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Player ' + rsn + ' added on team: ' + team)
 
-    @self.bot.tree.command(name='change_player_team', description='STAFF ONLY: Change the team of a player. Also handles role changes.')
+    @self.bot.tree.command(name='change_player_team', description='ADMIN ONLY: Change the team of a player. Also handles role changes.')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
     async def change_player_team(interaction: Interaction, player: str, team: str):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(player not in self.players):
@@ -488,10 +487,10 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
 
-    @self.bot.tree.command(name='change_player_rsn', description='STAFF ONLY: Change the RSN of a player.')
+    @self.bot.tree.command(name='change_player_rsn', description='ADMIN ONLY: Change the RSN of a player.')
     @app_commands.autocomplete(old_rsn=player_autocomplete)
     async def change_player_rsn(interaction: Interaction, old_rsn: str, new_rsn: str):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(old_rsn not in self.players):
@@ -501,10 +500,10 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: The RSN ' + old_rsn + ' has been changed to ' + new_rsn)
 
-    @self.bot.tree.command(name='change_player_discord_name', description='STAFF ONLY: Change the Discord name of a player.')
+    @self.bot.tree.command(name='change_player_discord_name', description='ADMIN ONLY: Change the Discord name of a player.')
     @app_commands.autocomplete(old_discord_name=discord_name_autocomplete)
     async def change_player_discord_name(interaction: Interaction, old_discord_name: str, new_discord_name: str):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(old_discord_name not in self.discordNames):
@@ -514,10 +513,10 @@ class ShowdownBot:
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: The Discord name ' + old_discord_name + ' has been changed to ' + new_discord_name)
 
-    @self.bot.tree.command(name='set_staff_adjustment', description='STAFF ONLY: Set the staff adjustment for a contribution method on a player')
+    @self.bot.tree.command(name='set_staff_adjustment', description='ADMIN ONLY: Set the staff adjustment for a contribution method on a player')
     @app_commands.autocomplete(player=player_autocomplete, method=method_autocomplete)
     async def set_staff_adjustment(interaction: Interaction, player: str, method: str, adjustment: int):
-      await self.staffCheck(interaction)
+      await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(player not in self.players):

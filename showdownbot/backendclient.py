@@ -207,9 +207,9 @@ class BackendClient():
     for challenge in response.json():
       if(len(challenge['relayComponents']) > 0):
         for component in challenge['relayComponents']:
-          challenges.append({'nameAndRelayComponent': challenge['name'] + ' - ' + component['name'], 'name': challenge['name'], 'relayComponent': component['name']})
+          challenges.append({'nameAndRelayComponent': challenge['name'] + ' - ' + component['name'], 'name': challenge['name'], 'relayComponent': component['name'], 'type': challenge['type']})
       else:
-        challenges.append({'nameAndRelayComponent': challenge['name'], 'name': challenge['name'], 'relayComponent': None})
+        challenges.append({'nameAndRelayComponent': challenge['name'], 'name': challenge['name'], 'relayComponent': None, 'type': challenge['type']})
     return challenges
   
   def approveSubmission(self, id, reviewer):
@@ -295,7 +295,7 @@ class BackendClient():
       raise Exception('Failed to submit collection log item')
     return response.json()['id']
   
-  def submitChallenge(self, rsn, challengeNameAndRelayComponent, seconds, urls, description):
+  def submitSpeedChallenge(self, rsn, challengeNameAndRelayComponent, seconds, urls, description):
     challengeName = challengeNameAndRelayComponent.split('|')[0]
     relayComponentName = None
     if('|' in challengeNameAndRelayComponent):
@@ -307,6 +307,19 @@ class BackendClient():
       'challengeName': challengeName,
       'relayComponentName': relayComponentName,
       'seconds': float(seconds),
+      'screenshotURLs': urls,
+      'description': description
+    }
+    response = self.post('/submissions/challenge', body)
+    if(response.status_code != 200):
+      raise Exception('Failed to submit challenge')
+    return response.json()['id']
+  
+  def submitPointChallenge(self, rsn, challengeName, points, urls, description):
+    body = {
+      'rsn': rsn,
+      'challengeName': challengeName,
+      'points': points,
       'screenshotURLs': urls,
       'description': description
     }

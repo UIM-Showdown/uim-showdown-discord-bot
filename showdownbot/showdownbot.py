@@ -343,7 +343,19 @@ class ShowdownBot:
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = challenge['name'], value = challenge['name'])
-        for challenge in self.challenges if current.lower() in challenge['name'].lower() and challenge['relayComponent'] is None
+        for challenge in self.challenges if current.lower() in challenge['name'].lower() and challenge['type'] == 'SPEEDRUN'
+      ]
+      if(len(results) > 25):
+        results = results[:25]
+      return results
+    
+    async def point_challenge_autocomplete(
+      interaction: Interaction,
+      current: str
+    ) -> list[app_commands.Choice[str]]:
+      results = [
+        app_commands.Choice(name = challenge['name'], value = challenge['name'])
+        for challenge in self.challenges if current.lower() in challenge['name'].lower() and challenge['type'] == 'POINTS'
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -355,7 +367,7 @@ class ShowdownBot:
     ) -> list[app_commands.Choice[str]]:
       results = [
         app_commands.Choice(name = challenge['nameAndRelayComponent'], value = challenge['name'] + '|' + str(challenge['relayComponent']))
-        for challenge in self.challenges if current.lower() in challenge['nameAndRelayComponent'].lower() and challenge['relayComponent'] is not None
+        for challenge in self.challenges if current.lower() in challenge['nameAndRelayComponent'].lower() and challenge['type'] == 'RELAY'
       ]
       if(len(results) > 25):
         results = results[:25]
@@ -768,15 +780,15 @@ class ShowdownBot:
         raise errors.UserError('tenths_of_seconds cannot be greater than 9')
       finalSeconds = (minutes * 60) + seconds + (tenths_of_seconds * 0.1)
       description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challenge, minutes, seconds, tenths_of_seconds)
-      ids = [self.backendClient.submitChallenge(rsn_1, challenge, finalSeconds, [screenshot.url], description)]
+      ids = [self.backendClient.submitSpeedChallenge(rsn_1, challenge, finalSeconds, [screenshot.url], description)]
       if(rsn_2 is not None):
-        ids.append(self.backendClient.submitChallenge(rsn_2, challenge, finalSeconds, [screenshot.url], description))
+        ids.append(self.backendClient.submitSpeedChallenge(rsn_2, challenge, finalSeconds, [screenshot.url], description))
       if(rsn_3 is not None):
-        ids.append(self.backendClient.submitChallenge(rsn_3, challenge, finalSeconds, [screenshot.url], description))
+        ids.append(self.backendClient.submitSpeedChallenge(rsn_3, challenge, finalSeconds, [screenshot.url], description))
       if(rsn_4 is not None):
-        ids.append(self.backendClient.submitChallenge(rsn_4, challenge, finalSeconds, [screenshot.url], description))
+        ids.append(self.backendClient.submitSpeedChallenge(rsn_4, challenge, finalSeconds, [screenshot.url], description))
       if(rsn_5 is not None):
-        ids.append(self.backendClient.submitChallenge(rsn_5, challenge, finalSeconds, [screenshot.url], description))
+        ids.append(self.backendClient.submitSpeedChallenge(rsn_5, challenge, finalSeconds, [screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'
@@ -796,7 +808,29 @@ class ShowdownBot:
       if(challenge.split('|')[1] != 'None'):
         challengeName += ' - ' + challenge.split('|')[1]
       description = '{0} time of {1:0>2}:{2:0>2}.{3}'.format(challengeName, minutes, seconds, tenths_of_seconds)
-      ids = [self.backendClient.submitChallenge(self.discordUserRSNs[interaction.user.name], challenge, finalSeconds, [screenshot.url], description)]
+      ids = [self.backendClient.submitSpeedChallenge(self.discordUserRSNs[interaction.user.name], challenge, finalSeconds, [screenshot.url], description)]
+      submission = submissions.Submission(self, interaction, ids, description)
+      await self.sendSubmissionToQueue(submission)
+      responseText = '# Submission received:\n'
+      responseText += str(submission)
+      await interaction.response.send_message(responseText)
+
+    @self.bot.tree.command(name='submit_point_challenge', description='Submit your point-based challenge entry for the competition!')
+    @app_commands.autocomplete(challenge=point_challenge_autocomplete, rsn_1=player_autocomplete, rsn_2=player_autocomplete, rsn_3=player_autocomplete, rsn_4=player_autocomplete, rsn_5=player_autocomplete)
+    async def submit_point_challenge(interaction: Interaction, screenshot: Attachment, points: int, challenge: str, rsn_1: str, rsn_2: Optional[str], rsn_3: Optional[str], rsn_4: Optional[str], rsn_5: Optional[str]):
+      await self.submissionPreChecks(interaction)
+      if(points < 0):
+        raise errors.UserError('Points cannot be negative')
+      description = '{0} entry of {1}'.format(challenge, points)
+      ids = [self.backendClient.submitPointChallenge(rsn_1, challenge, points, [screenshot.url], description)]
+      if(rsn_2 is not None):
+        ids.append(self.backendClient.submitPointChallenge(rsn_2, challenge, points, [screenshot.url], description))
+      if(rsn_3 is not None):
+        ids.append(self.backendClient.submitPointChallenge(rsn_3, challenge, points, [screenshot.url], description))
+      if(rsn_4 is not None):
+        ids.append(self.backendClient.submitPointChallenge(rsn_4, challenge, points, [screenshot.url], description))
+      if(rsn_5 is not None):
+        ids.append(self.backendClient.submitPointChallenge(rsn_5, challenge, points, [screenshot.url], description))
       submission = submissions.Submission(self, interaction, ids, description)
       await self.sendSubmissionToQueue(submission)
       responseText = '# Submission received:\n'

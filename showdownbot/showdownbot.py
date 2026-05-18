@@ -446,6 +446,15 @@ class ShowdownBot:
       self.backendClient.updateBackend(force)
       await interaction.followup.send('Success: Backend updated')
 
+    @self.bot.tree.command(name='sychronize_temple_comp', description='ADMIN ONLY: Synchronize the team rosters in the Temple comp')
+    async def sychronize_temple_comp(interaction: Interaction):
+      await self.adminCheck(interaction)
+      if(not self.competitionLoaded):
+        raise errors.UserError('Competition not loaded')
+      await interaction.response.send_message('Sychronizing Temple comp...')
+      self.backendClient.synchronizeTempleComp()
+      await interaction.followup.send('Success: Temple comp synchronized')
+
     @self.bot.tree.command(name='reload_competition_info', description='ADMIN ONLY: Reload competition info from the backend')
     async def reload_competition_info(interaction: Interaction):
       await self.adminCheck(interaction)
@@ -470,7 +479,7 @@ class ShowdownBot:
 
     @self.bot.tree.command(name='add_player', description='ADMIN ONLY: Add a player to the competition, and assign the relevant role.')
     @app_commands.autocomplete(team=team_autocomplete)
-    async def add_player(interaction: Interaction, rsn: str, discord_name: str, team: str):
+    async def add_player(interaction: Interaction, rsn: str, discord_name: str, team: str, synchronize_temple_comp: Optional[bool] = True):
       await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
@@ -480,13 +489,13 @@ class ShowdownBot:
       if(team not in self.teams):
         raise errors.UserError('Team not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Adding player...')
-      self.backendClient.addPlayer(rsn, discord_name, team)
+      self.backendClient.addPlayer(rsn, discord_name, team, synchronize_temple_comp)
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Player ' + rsn + ' added on team: ' + team)
 
     @self.bot.tree.command(name='change_player_team', description='ADMIN ONLY: Change the team of a player. Also handles role changes.')
     @app_commands.autocomplete(player=player_autocomplete, team=team_autocomplete)
-    async def change_player_team(interaction: Interaction, player: str, team: str):
+    async def change_player_team(interaction: Interaction, player: str, team: str, synchronize_temple_comp: Optional[bool] = True):
       await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
@@ -495,20 +504,20 @@ class ShowdownBot:
       if(team not in self.teams):
         raise errors.UserError('Team not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Changing player team...')
-      self.backendClient.changePlayerTeam(player, team)
+      self.backendClient.changePlayerTeam(player, team, synchronize_temple_comp)
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: Player ' + player + ' is now on team ' + team)
 
     @self.bot.tree.command(name='change_player_rsn', description='ADMIN ONLY: Change the RSN of a player.')
     @app_commands.autocomplete(old_rsn=player_autocomplete)
-    async def change_player_rsn(interaction: Interaction, old_rsn: str, new_rsn: str):
+    async def change_player_rsn(interaction: Interaction, old_rsn: str, new_rsn: str, synchronize_temple_comp: Optional[bool] = True):
       await self.adminCheck(interaction)
       if(not self.competitionLoaded):
         raise errors.UserError('Competition not loaded')
       if(old_rsn not in self.players):
         raise errors.UserError('Player not found - Make sure to click the autocomplete option')
       await interaction.response.send_message('Changing player RSN...')
-      self.backendClient.changePlayerRsn(old_rsn, new_rsn)
+      self.backendClient.changePlayerRsn(old_rsn, new_rsn, synchronize_temple_comp)
       await self.loadCompetitionInfo()
       await interaction.followup.send('Success: The RSN ' + old_rsn + ' has been changed to ' + new_rsn)
 

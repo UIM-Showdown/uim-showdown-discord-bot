@@ -73,27 +73,39 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to update backend')
     
+  def synchronizeTempleComp(self):
+    uri = '/admin/synchronizeTempleComp'
+    response = self.post(uri, None)
+    if(response.status_code != 200):
+      raise Exception('Failed to sychronize Temple comp')
+    
   def reinitializeTile(self, tile):
     response = self.post('/admin/reinitializeTile/' + tile, None)
     if(response.status_code != 200):
       raise Exception('Failed to reinitialize tile')
     
-  def addPlayer(self, rsn, discordName, teamName):
+  def addPlayer(self, rsn, discordName, teamName, synchronize_temple_comp):
+    uri = '/admin/addPlayer'
+    if(not synchronize_temple_comp):
+      uri += '?synchronizeTempleComp=false'
     body = {
       'rsn': rsn,
       'discordName': discordName,
       'teamName': teamName
     }
-    response = self.post('/admin/addPlayer', body)
+    response = self.post(uri, body)
     if(response.status_code != 200):
       raise Exception('Failed to add player')
     
-  def changePlayerRsn(self, oldRsn, newRsn):
+  def changePlayerRsn(self, oldRsn, newRsn, synchronize_temple_comp):
+    uri = '/admin/changePlayerRsn'
+    if(not synchronize_temple_comp):
+      uri += '?synchronizeTempleComp=false'
     body = {
       'oldRsn': oldRsn,
       'newRsn': newRsn
     }
-    response = self.patch('/admin/changePlayerRsn', body)
+    response = self.patch(uri, body)
     if(response.status_code != 200):
       raise Exception('Failed to change player RSN')
     
@@ -106,14 +118,17 @@ class BackendClient():
     if(response.status_code != 200):
       raise Exception('Failed to change player Discord name')
   
-  def changePlayerTeam(self, player, team):
+  def changePlayerTeam(self, player, team, synchronize_temple_comp):
+    uri = '/admin/changePlayerTeam'
+    if(not synchronize_temple_comp):
+      uri += '?synchronizeTempleComp=false'
     body = {
       'rsn': player,
       'teamName': team
     }
-    response = self.patch('/admin/changePlayerTeam', body)
+    response = self.patch(uri, body)
     if(response.status_code != 200):
-      raise Exception('Failed to get competition info')
+      raise Exception('Failed to change player team')
     
   def setStaffAdjustment(self, player, method, adjustment):
     body = {

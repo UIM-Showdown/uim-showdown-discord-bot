@@ -82,8 +82,9 @@ class ShowdownBot:
       raise errors.UserError("Please only submit commands in your team's bot submission channel")
     
   async def adminCheck(self, interaction):
-    staffRole = utils.find(lambda r: r.name == 'Event staff' or r.name == 'Technical Lead', self.bot.get_guild(self.guildId).roles)
-    if(staffRole not in interaction.user.roles):
+    staffRole = utils.find(lambda r: r.name.lower() == 'event staff', self.bot.get_guild(self.guildId).roles)
+    techLeadRole = utils.find(lambda r: r.name.lower() == 'technical lead', self.bot.get_guild(self.guildId).roles)
+    if(staffRole not in interaction.user.roles and techLeadRole not in interaction.user.roles):
       raise errors.UserError('This command is only for event staff or technical lead usage')
     
   '''

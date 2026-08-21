@@ -395,11 +395,11 @@ class ShowdownBot:
       await interaction.response.send_message('Updating competitor role...')
       response = self.backendClient.updateCompetitorRole()
       if(len(response['signupsNotFound']) == 0):
-        await interaction.followup.send('Success: Competitor role updated. All Discord names were found on the server.')
+        await interaction.followup.send('Success: Role additions queued. All Discord names were found on the server.')
       elif(len(response['signupsNotFound']) > 50):
-        await interaction.followup.send(f'Success: Competitor role updated. {str(len(response['namesNotFound']))} names were not found on the server.')
+        await interaction.followup.send(f'Success: Role additions queued. {str(len(response['namesNotFound']))} names were not found on the server.')
       else:
-        message = 'Success: Competitor role updated. The following signups were not found on the server:\n'
+        message = 'Success: Role additions queued. The following signups were not found on the server:\n'
         for signup in response['signupsNotFound']:
           message += f'RSN: "{signup['rsn']}" / Discord name: "{signup['discordName']}"\n'
         message = message[:-1]
@@ -415,11 +415,11 @@ class ShowdownBot:
       await interaction.response.send_message('Setting up Discord server...')
       response = self.backendClient.setupDiscordServer()
       if(len(response['namesNotFound']) == 0):
-        await interaction.followup.send('Success: Team roles/channels created. All Discord names were found on the server.')
+        await interaction.followup.send('Success: Team roles/channels created, role additions queued. All Discord names were found on the server.')
       elif(len(response['namesNotFound']) > 50):
-        await interaction.followup.send('Success: Team roles/channels created. ' + str(len(response['namesNotFound'])) + ' names were not found on the server.')
+        await interaction.followup.send('Success: Team roles/channels created, role additions queued. ' + str(len(response['namesNotFound'])) + ' names were not found on the server.')
       else:
-        message = 'Success: Team roles/channels created. The following Discord names were not found on the server:\n'
+        message = 'Success: Team roles/channels created, role additions queued. The following Discord names were not found on the server:\n'
         for name in response['namesNotFound']:
           message += name + "\n"
         message = message[:-1]

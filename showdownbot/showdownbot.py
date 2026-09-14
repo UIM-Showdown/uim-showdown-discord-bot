@@ -677,19 +677,6 @@ class ShowdownBot:
       responseText = '# Submission received:\n'
       responseText += str(submission)
       await interaction.response.send_message(responseText)
-    
-    @self.bot.tree.command(name='submit_hueycoatl_hides', description='Submit your Hueycoatl hides for the competition!')
-    async def submit_hueycoatl_hides(interaction: Interaction, screenshot: Attachment, hides: int):
-      await self.submissionPreChecks(interaction)
-      if(hides < 0):
-        raise errors.UserError('Hides cannot be negative')
-      description = f'{hides} Hueycoatl hides'
-      ids = [self.backendClient.submitContribution(self.discordUserRSNs[interaction.user.name], 'Hueycoatl: Hides', hides, [screenshot.url], description)]
-      submission = submissions.Submission(self, interaction, ids, description)
-      await self.sendSubmissionToQueue(submission)
-      responseText = '# Submission received:\n'
-      responseText += str(submission)
-      await interaction.response.send_message(responseText)
 
     @self.bot.tree.command(name='submit_mixology', description='Submit your mixology resin counts for the competition!')
     async def submit_mixology(interaction: Interaction, screenshot: Attachment, mox_resin: int, aga_resin: int, lye_resin: int):

@@ -1,0 +1,7 @@
+[CompetitionProperties]
+token = <value>
+submissionQueueChannelId = <value>
+submissionLogChannelId = <value>
+errorsChannelId = <value>
+guildId = <value>
+backendUrl = <value>
